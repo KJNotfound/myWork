@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# IDE files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache
+.cache/
+
+# Environment variables
+.env
+.env.local
+.env.production

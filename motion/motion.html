@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Motion Demo</title>
+</head>
+
+<body>
+  <!-- 添加需要动画的元素 -->
+  <div class="box"></div>
+
+  <script type="module">
+    // 修正导入：只保留 CDN 导入，删除无法在浏览器直接运行的 "motion" 裸模块导入
+    import { animate, scroll } from "https://cdn.jsdelivr.net/npm/motion@latest/+esm"
+
+    // 确保元素存在后再执行动画
+    // 添加 duration 让动画更容易观察到
+    animate(".box", { rotate: 360 }, { duration: 2, repeat: Infinity })
+  </script>
+
+  <style>
+    /* 添加样式使元素可见 */
+    .box {
+      width: 100px;
+      height: 200px;
+      background-color: #3498db;
+      margin: 100px auto;
+      border-radius: 10px;
+    }
+  </style>
+</body>
+
+</html>
