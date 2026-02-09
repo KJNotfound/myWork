@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>智慧换热站 - 数字化图表大屏</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+
+  <style>
+    :root {
+      --bg-deep: #050a10;
+      --panel-bg: rgba(16, 32, 56, 0.7);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --accent-red: #ff3300;
+      --text-main: #e0e6ed;
+      --border-line: rgba(79, 172, 254, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text-main);
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    /* 布局容器 */
+    .dashboard {
+      width: 1920px;
+      height: 1080px;
+      transform-origin: top left;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 10px;
+    }
+
+    /* 顶部标题栏 */
+    .header {
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(79, 172, 254, 0.2), transparent);
+      border-bottom: 2px solid var(--accent-blue);
+      padding: 0 40px;
+    }
+
+    .header h1 {
+      letter-spacing: 8px;
+      font-size: 32px;
+      color: #fff;
+      text-shadow: 0 0 15px var(--accent-blue);
+    }
+
+    /* 内容网格 */
+    .content-grid {
+      flex: 1;
+      display: grid;
+      grid-template-rows: 60% 38%;
+      gap: 10px;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 25% 50% 25%;
+      gap: 10px;
+    }
+
+    .bottom-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    /* 面板通用样式 */
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-line);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(79, 172, 254, 0.1);
+    }
+
+    .panel-title {
+      height: 36px;
+      line-height: 36px;
+      padding-left: 15px;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--accent-cyan);
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid var(--border-line);
+    }
+
+    /* 表格样式 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+    }
+
+    th {
+      color: var(--accent-blue);
+      font-size: 12px;
+      padding: 10px 5px;
+      border-bottom: 1px solid var(--border-line);
+    }
+
+    td {
+      padding: 8px 5px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+    }
+
+    .highlight {
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    /* 工艺图背景 */
+    .process-box {
+      flex: 1;
+      background: radial-gradient(circle, #102a43 0%, #050a10 100%);
+      position: relative;
+    }
+
+    .chart-box {
+      flex: 1;
+      min-height: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="dashboard" id="app">
+    <header class="header">
+      <div id="time">2026-02-08 16:00:00</div>
+      <h1>智慧换热站数字孪生看板</h1>
+      <div>北京 | 3℃ 晴</div>
+    </header>
+
+    <div class="content-grid">
+      <div class="top-row">
+        <div class="panel">
+          <div class="panel-title">机组运行概览</div>
+          <table>
+            <thead>
+              <tr>
+                <th>机组</th>
+                <th>供热面积</th>
+                <th>供热比</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>低区机组</td>
+                <td>12.4万㎡</td>
+                <td class="highlight">96.5%</td>
+                <td>运行中</td>
+              </tr>
+              <tr>
+                <td>中区机组</td>
+                <td>8.6万㎡</td>
+                <td class="highlight">98.7%</td>
+                <td>运行中</td>
+              </tr>
+              <tr>
+                <td>高区机组</td>
+                <td>6.2万㎡</td>
+                <td class="highlight">94.3%</td>
+                <td>待机</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="panel-title" style="margin-top:auto">能耗即时排名</div>
+          <div id="radarStatus" class="chart-box"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">机组工艺动态孪生</div>
+          <div class="process-box">
+            <svg viewBox="0 0 800 500" style="width:100%; height:100%">
+              <rect x="360" y="100" width="80" height="300" rx="10" fill="rgba(30,60,90,0.8)" stroke="#4facfe"
+                stroke-width="2" />
+              <text x="400" y="250" fill="#fff" text-anchor="middle"
+                style="writing-mode:tb; font-size:16px; letter-spacing:5px">板式换热器</text>
+
+              <g fill="none" stroke-width="8" stroke-linecap="round">
+                <path id="pipeRed" d="M50,150 L350,150" stroke="rgba(255,51,0,0.2)" />
+                <path id="pipeBlue" d="M750,350 L450,350" stroke="rgba(0,242,254,0.2)" />
+              </g>
+
+              <g id="particles"></g>
+
+              <rect x="60" y="110" width="100" height="30" rx="4" fill="rgba(0,0,0,0.5)" stroke="#ff3300" />
+              <text x="110" y="130" fill="#ff3300" text-anchor="middle" font-size="12">供温: 96.2℃</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">故障预警与维护</div>
+          <div style="padding: 10px;">
+            <div style="color: #ff5252; margin-bottom: 10px;">● 1号循环泵通讯异常</div>
+            <div style="color: #ffb300; margin-bottom: 10px;">● 二次网压差波动预警</div>
+            <div style="color: #4facfe;">● 计划检修：2号板换清洗</div>
+          </div>
+          <div id="pieResist" class="chart-box"></div>
+        </div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="panel">
+          <div class="panel-title">实时能耗趋势 (kWh)</div>
+          <div id="energyLine" class="chart-box"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">供/回温度分布</div>
+          <div id="tempLine" class="chart-box"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">各机组室温监控</div>
+          <div id="roomBar" class="chart-box"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">运行状态评价</div>
+          <div id="scoreRadar" class="chart-box"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1. 自动缩放适配
+    function handleResize() {
+      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      document.getElementById('app').style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // 2. 工艺图粒子动画
+    function initFlow() {
+      gsap.registerPlugin(MotionPathPlugin);
+      const container = document.getElementById('particles');
+      const createPart = (pathId, color) => {
+        for (let i = 0; i < 8; i++) {
+          const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          c.setAttribute("r", "3"); c.setAttribute("fill", color);
+          container.appendChild(c);
+          gsap.to(c, {
+            duration: 2 + Math.random(), repeat: -1, ease: "none",
+            delay: Math.random() * 2,
+            motionPath: { path: pathId, alignOrigin: [0.5, 0.5] }
+          });
+        }
+      };
+      createPart("#pipeRed", "#ff3300");
+      createPart("#pipeBlue", "#00f2fe");
+    }
+
+    // 3. ECharts 图表初始化
+    function initCharts() {
+      const lineOpt = {
+        grid: { top: 30, bottom: 30, left: 40, right: 10 },
+        xAxis: { type: 'category', data: ['12:00', '13:00', '14:00', '15:00', '16:00'], axisLabel: { color: '#8da2b5' } },
+        yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } } },
+        series: [{
+          type: 'line', smooth: true, data: [120, 132, 101, 134, 90],
+          areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#4facfe' }, { offset: 1, color: 'transparent' }]) },
+          itemStyle: { color: '#4facfe' }
+        }]
+      };
+      echarts.init(document.getElementById('energyLine')).setOption(lineOpt);
+
+      const barOpt = {
+        grid: { top: 30, bottom: 30, left: 40, right: 10 },
+        xAxis: { type: 'category', data: ['低区', '中区', '高区'], axisLabel: { color: '#8da2b5' } },
+        yAxis: { type: 'value', min: 18, axisLabel: { color: '#8da2b5' } },
+        series: [{ type: 'bar', barWidth: '40%', data: [21.5, 22.8, 22.1], itemStyle: { color: '#00f2fe' } }]
+      };
+      echarts.init(document.getElementById('roomBar')).setOption(barOpt);
+
+      const radarOpt = {
+        radar: {
+          indicator: [{ name: '效率' }, { name: '稳定' }, { name: '节能' }, { name: '响应' }, { name: '安全' }],
+          splitArea: { show: false }, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } }
+        },
+        series: [{ type: 'radar', data: [{ value: [80, 90, 70, 85, 95] }], itemStyle: { color: '#4facfe' }, areaStyle: { color: 'rgba(79,172,254,0.3)' } }]
+      };
+      echarts.init(document.getElementById('scoreRadar')).setOption(radarOpt);
+
+      const pieOpt = {
+        series: [{
+          type: 'pie', radius: ['40%', '70%'],
+          label: { color: '#fff' },
+          data: [{ value: 40, name: '板换阻力' }, { value: 30, name: '除污器' }, { value: 30, name: '外网' }]
+        }]
+      };
+      echarts.init(document.getElementById('pieResist')).setOption(pieOpt);
+    }
+
+    // 4. 页面启动
+    window.onload = () => {
+      initFlow();
+      initCharts();
+      setInterval(() => {
+        document.getElementById('time').innerText = new Date().toLocaleString();
+      }, 1000);
+    };
+  </script>
+
+</body>
+
+</html>

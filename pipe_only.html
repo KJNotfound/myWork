@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>换热站管道系统</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #050a10;
+      color: #fff;
+      font-family: sans-serif;
+    }
+
+    #app {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* HUD 数据面板样式 */
+    .hud-label {
+      padding: 10px;
+      background: rgba(0, 24, 50, 0.8);
+      border: 1px solid #00e5ff;
+      border-left: 4px solid #00e5ff;
+      color: #00e5ff;
+      pointer-events: none;
+      user-select: none;
+      font-size: 12px;
+      min-width: 100px;
+    }
+
+    .hud-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    .alarm {
+      border-color: #ff3300;
+      color: #ff3300;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // 1. 基础环境
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(10, 8, 15);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.getElementById('app').appendChild(renderer.domElement);
+
+    // 2. CSS2D 渲染器 (用于数据面板)
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.getElementById('app').appendChild(labelRenderer.domElement);
+
+    // 3. 自定义管道 Shader 材质
+    const flowShader = {
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(0xff3300) },
+        uSpeed: { value: 2.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          float flow = fract(vUv.x * 2.0 - uTime * 0.5);
+          float alpha = smoothstep(0.0, 0.2, flow) - smoothstep(0.8, 1.0, flow);
+          gl_FragColor = vec4(uColor, alpha * 0.9 + 0.1);
+        }
+      `
+    };
+
+    // 4. 创建管道函数
+    const createPipe = (pathPoints, color) => {
+      const curve = new THREE.CatmullRomCurve3(pathPoints);
+      const geometry = new THREE.TubeGeometry(curve, 64, 0.15, 8, false);
+      const material = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.clone(flowShader.uniforms),
+        vertexShader: flowShader.vertexShader,
+        fragmentShader: flowShader.fragmentShader,
+        transparent: true,
+        blending: THREE.AdditiveBlending
+      });
+      material.uniforms.uColor.value.set(color);
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      return material;
+    };
+
+    // 5. 创建管道系统
+    // 热水供水管（红色）
+    const hotSupplyPipe = createPipe([
+      new THREE.Vector3(-8, 0, 0),
+      new THREE.Vector3(-4, 0, 0),
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(2, 2, 0),
+      new THREE.Vector3(4, 2, 0)
+    ], 0xff2200);
+
+    // 热水回水管（橙红色）
+    const hotReturnPipe = createPipe([
+      new THREE.Vector3(4, 2, 2),
+      new THREE.Vector3(2, 2, 2),
+      new THREE.Vector3(0, 0, 2),
+      new THREE.Vector3(-4, 0, 2),
+      new THREE.Vector3(-8, 0, 2)
+    ], 0xff4400);
+
+    // 冷水供水管（蓝色）
+    const coldSupplyPipe = createPipe([
+      new THREE.Vector3(8, 0, 0),
+      new THREE.Vector3(4, 0, 0),
+      new THREE.Vector3(2, 2, 0),
+      new THREE.Vector3(0, 0, 0)
+    ], 0x0066ff);
+
+    // 冷水回水管（深蓝色）
+    const coldReturnPipe = createPipe([
+      new THREE.Vector3(0, 0, 2),
+      new THREE.Vector3(2, 2, 2),
+      new THREE.Vector3(4, 0, 2),
+      new THREE.Vector3(8, 0, 2)
+    ], 0x0044cc);
+
+    // 6. 添加 HUD 面板
+    const createHUD = (pos, title, val, isAlarm = false) => {
+      const div = document.createElement('div');
+      div.className = `hud-label ${isAlarm ? 'alarm' : ''}`;
+      div.innerHTML = `<div>${title}</div><div class="hud-value">${val}</div>`;
+      const label = new CSS2DObject(div);
+      label.position.copy(pos);
+      scene.add(label);
+    };
+
+    createHUD(new THREE.Vector3(-4, 1, 0), "热水供水", "95.2 ℃");
+    createHUD(new THREE.Vector3(4, 3, 0), "热水回水", "65.8 ℃");
+    createHUD(new THREE.Vector3(4, 1, 0), "冷水供水", "42.1 ℃");
+    createHUD(new THREE.Vector3(4, 3, 2), "冷水回水", "52.3 ℃");
+
+    // 7. 辅助灯光与控制器
+    const ambientLight = new THREE.AmbientLight(0x404040, 2);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 5);
+    scene.add(directionalLight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    // 网格地面增强空间感
+    const grid = new THREE.GridHelper(20, 20, 0x004444, 0x002222);
+    scene.add(grid);
+
+    // 8. 渲染循环
+    const clock = new THREE.Clock();
+    const animate = () => {
+      const elapsed = clock.getElapsedTime();
+
+      hotSupplyPipe.uniforms.uTime.value = elapsed;
+      hotReturnPipe.uniforms.uTime.value = elapsed;
+      coldSupplyPipe.uniforms.uTime.value = elapsed;
+      coldReturnPipe.uniforms.uTime.value = elapsed;
+
+      controls.update();
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    };
+    animate();
+
+    // 窗口自适应
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

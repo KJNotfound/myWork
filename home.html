@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧换热站智能终端</title>
+  <style>
+    :root {
+      /* 核心颜色定义 */
+      --tech-blue: #00a8ff;
+      --white-glow: 0 0 10px oklch(1 0 0 / 0.9), 0 0 20px oklch(1 0 0 / 0.4);
+      --card-bg: oklch(0.15 0.03 250 / 0.8);
+      --border-blue: oklch(0.7 0.15 200 / 0.4);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Microsoft YaHei", sans-serif;
+      background-color: var(--bg-dark);
+      background: radial-gradient(circle at center, #10213d 0%, #070b14 100%);
+      color: #ffffff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 炫酷科技背景：扫描线效果 */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(oklch(0.1 0 0 / 0) 50%, oklch(0.7 0.15 200 / 0.05) 50%),
+        linear-gradient(90deg, oklch(0.7 0.15 200 / 0.02) 1px, transparent 1px),
+        linear-gradient(oklch(0.7 0.15 200 / 0.02) 1px, transparent 1px);
+      background-size: 100% 4px, 60px 60px, 60px 60px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .nav-header {
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: oklch(0 0 0 / 0.4);
+      border-bottom: 2px solid var(--border-blue);
+      box-shadow: 0 5px 15px oklch(0.7 0.15 200 / 0.1);
+      z-index: 10;
+    }
+
+    .glow-title {
+      color: #ffffff;
+      font-size: 2rem;
+      letter-spacing: 6px;
+      font-weight: bold;
+      text-shadow: var(--white-glow);
+      margin: 0;
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      padding: 30px;
+      gap: 30px;
+      z-index: 5;
+    }
+
+    /* 左侧边栏 */
+    .sidebar {
+      width: 80px;
+      background: oklch(0.1 0.02 250 / 0.95);
+      border-right: 1px solid var(--border-blue);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 40px;
+    }
+
+    .nav-header-only {
+      writing-mode: vertical-rl;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--tech-blue);
+      letter-spacing: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 15px oklch(0.7 0.15 200 / 0.8);
+    }
+
+    /* 3x3 矩阵功能区 */
+    .function-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 25px;
+    }
+
+    .grid-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-blue);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.4s ease;
+      cursor: pointer;
+      /* 确保鼠标移动上去是手型 */
+    }
+
+    .grid-card::before,
+    .grid-card::after {
+      content: "";
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--tech-blue);
+    }
+
+    .grid-card::before {
+      top: -1px;
+      left: -1px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .grid-card::after {
+      bottom: -1px;
+      right: -1px;
+      border-left: none;
+      border-top: none;
+    }
+
+    /* 中心模块"我的换热站"基础样式 */
+    .center-module {
+      border-color: var(--border-blue);
+      background: var(--card-bg);
+      box-shadow: none;
+    }
+
+    .center-module::before,
+    .center-module::after {
+      border-color: var(--border-blue);
+    }
+
+    /* 中心模块鼠标悬停效果 */
+    .center-module:hover {
+      border-color: #ffffff;
+      background: radial-gradient(circle, oklch(1 0 0 / 0.15) 0%, transparent 80%);
+      box-shadow: 0 0 30px oklch(0.7 0.15 200 / 0.3);
+    }
+
+    .center-module:hover::before,
+    .center-module:hover::after {
+      border-color: #ffffff;
+    }
+
+    .grid-card svg {
+      width: 55px;
+      height: 55px;
+      fill: var(--tech-blue);
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 5px var(--tech-blue));
+    }
+
+    .label {
+      font-size: 1.4rem;
+      color: #a0c4ff;
+      letter-spacing: 2px;
+    }
+
+    /* 中心模块标签基础样式 */
+    .center-module .label {
+      color: #a0c4ff;
+      text-shadow: none;
+    }
+
+    /* 中心模块SVG基础样式 */
+    .center-module svg {
+      fill: var(--tech-blue);
+      filter: drop-shadow(0 0 5px var(--tech-blue));
+    }
+
+    /* 中心模块鼠标悬停时标签样式 */
+    .center-module:hover .label {
+      color: #ffffff;
+      text-shadow: var(--white-glow);
+    }
+
+    /* 中心模块鼠标悬停时SVG样式 */
+    .center-module:hover svg {
+      fill: #ffffff;
+      filter: drop-shadow(0 0 10px oklch(1 0 0 / 0.8));
+    }
+
+    .active-module:hover {
+      transform: translateY(-5px) scale(1.02);
+      border-color: #ffffff;
+      background: radial-gradient(circle, oklch(1 0 0 / 0.15) 0%, transparent 80%);
+      box-shadow: 0 0 30px oklch(0.7 0.15 200 / 0.3);
+    }
+
+    .active-module:hover::before,
+    .active-module:hover::after {
+      border-color: #ffffff;
+    }
+
+    .active-module:hover .label {
+      color: #ffffff;
+      text-shadow: var(--white-glow);
+    }
+
+    .active-module:hover svg {
+      fill: #ffffff;
+      filter: drop-shadow(0 0 10px oklch(1 0 0 / 0.8));
+    }
+
+    .empty-slot {
+      border: 1px dashed oklch(0.7 0.15 200 / 0.1);
+      background: transparent;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="nav-header">
+    <h2 class="glow-title">换热站智能终端控制中心</h2>
+  </header>
+
+  <main class="main-container">
+    <div class="sidebar">
+      <div class="nav-header-only" onclick="window.location.href='index.html'">
+        智能换热站
+      </div>
+    </div>
+
+    <section class="function-grid">
+      <div class="grid-card active-module">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+        </svg>
+        <div class="label">一键巡站</div>
+      </div>
+      <div class="grid-card empty-slot"></div>
+      <div class="grid-card active-module">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-2v-4H8v-2h2V7h2v4h2v2h-2v4z" />
+        </svg>
+        <div class="label">健康监测分析</div>
+      </div>
+
+      <div class="grid-card empty-slot"></div>
+
+      <div class="grid-card active-module center-module"
+        onclick="window.location.href='./smart_heating_station_terminal.html'">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm10 12h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z" />
+        </svg>
+        <div class="label">我的换热站</div>
+      </div>
+
+      <div class="grid-card empty-slot"></div>
+
+      <div class="grid-card active-module">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7a6.92 6.92 0 0 1 2.59-5.41L6.17 5.17A8.992 8.992 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z" />
+        </svg>
+        <div class="label">一键启停</div>
+      </div>
+      <div class="grid-card empty-slot"></div>
+      <div class="grid-card active-module">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 13v8h8v-8h-8zM3 21h8v-8H3v8zM3 3v8h8V3H3zm13.66 2L13 11h7.32L16.66 5z" />
+        </svg>
+        <div class="label">资产盘点</div>
+      </div>
+    </section>
+  </main>
+</body>
+
+</html>

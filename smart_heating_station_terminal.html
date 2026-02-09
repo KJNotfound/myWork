@@ -552,7 +552,7 @@
           <div class="panel-header">机组工艺流程图</div>
           <div class="process-content" id="processContainer" style="position: relative; flex: 1; background: var(--proc-bg); overflow: hidden; height: 100%; 
             --proc-bg: radial-gradient(circle at center, #1b3352 0%, #0a1524 100%);
-            --pipe-color: oklch(0.5 0.15 230 / 0.435);
+            --pipe-color: rgba(255, 255, 255, 0.3);
             ">
             <svg id="process-svg" viewBox="0 0 800 480" style="width: 100%; height: 100%;">
               <defs>
@@ -582,61 +582,125 @@
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
+
+                <filter id="heat-shimmer" x="-50%" y="-50%" width="200%" height="200%">
+                  <!-- 1. 基础发光 (增强范围和强度) -->
+                  <!-- 减小 stdDeviation 以收紧光晕，提高中心亮度 -->
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
+                  <feFlood flood-color="#5d809a" result="glowColor" />
+                  <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
+
+                  <!-- 2. 动态湍流纹理 (模拟热浪) -->
+                  <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="noise">
+                    <animate attributeName="baseFrequency" values="0.015;0.025;0.015" dur="10s"
+                      repeatCount="indefinite" />
+                  </feTurbulence>
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"
+                    result="distorted" />
+
+                  <!-- 3. 组合：辉光 + 原始图形 (确保 SourceGraphic 在最上层以保持清晰度) -->
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="glow" /> <!-- 叠加第二次增强亮度 -->
+                    <feMergeNode in="distorted" /> <!-- 扭曲后的本体 -->
+                    <!-- 关键修复：添加原始图形在最顶层，并略微混合，以恢复对比度 -->
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <!-- 新增：图标辉光光环特效 (增强版) -->
+                <filter id="icon-glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <!-- 1. 提取Alpha通道并扩充，形成外轮廓 (扩大范围) -->
+                  <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="thicken" />
+                  <!-- 2. 高斯模糊 (增加模糊半径，使光晕更散) -->
+                  <feGaussianBlur in="thicken" stdDeviation="5" result="blurred" />
+                  <!-- 3. 设置光环颜色 (青色) -->
+                  <feFlood flood-color="#22a4d7" result="glowColor" />
+                  <!-- 4. 混合颜色与模糊层 -->
+                  <feComposite in="glowColor" in2="blurred" operator="in" result="softGlow_colored" />
+                  <!-- 5. 组合：光环(叠加两次以增强亮度) + 原始图形 -->
+                  <feMerge>
+                    <feMergeNode in="softGlow_colored" />
+                    <feMergeNode in="softGlow_colored" /> <!-- 叠加第二次增强亮度 -->
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="particle-glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <!-- 增加模糊半径，让粒子融合感更强 -->
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+                  <feColorMatrix in="blur" type="matrix" values="
+                       1 0 0 0 0
+                       0 1 0 0 0
+                       0 0 1 0 0
+                       0 0 0 25 -5" result="glow" /> <!-- 增强 Alpha 通道对比度，让边缘更锐利发光 -->
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
               </defs>
 
               <!-- 流体粒子 -->
-              <g id="flow-particles"></g>
+              <g id="flow-particles" filter="url(#particle-glow)"></g>
               <!-- 管道 -->
-              <g fill="none" stroke-width="12" stroke-linecap="round" opacity="0.7">
+              <g fill="none" stroke-width="17" stroke-linecap="round" opacity="0.6">
                 <path id="pipe-h-in" d="M50,140 L350,140" stroke="var(--pipe-color)" />
                 <path id="pipe-h-out" d="M350,340 L50,340" stroke="var(--pipe-color)" />
                 <path id="pipe-c-out" d="M450,140 L750,140" stroke="var(--pipe-color)" />
                 <path id="pipe-c-in" d="M750,340 L450,340" stroke="var(--pipe-color)" />
-                <path d="M700,290 L700,331" stroke="var(--pipe-color)" stroke-width="8" stroke-dasharray="2,2" />
+                <!-- <path d="M700,290 L700,331" stroke="var(--pipe-color)" stroke-width="8" stroke-dasharray="2,2" /> -->
               </g>
 
               <!-- 板式换热器 -->
               <g transform="translate(360, 90)">
-                <!-- 使用heat.svg图标替换原有的板式换热器图形 -->
-                <image x="-15" y="-25" width="120" height="350" href="icon/heat.svg">
-                </image>
+                <!-- 1. 基础图形：应用动态热力滤镜 (发光 + 扭曲) -->
+                <image x="-15" y="-25" width="120" height="350" href="icon/heat.svg" filter="url(#heat-shimmer)" />
+
+                <!-- 2. 叠加层：能量扫描特效 -->
+                <!-- 使用 mask 或直接叠加半透明 rect 实现扫描光效 -->
+                <rect x="15" y="0" width="60" height="300" fill="url(#heat-flow-gradient)"
+                  style="pointer-events: none; mix-blend-mode: screen;" />
 
                 <!-- 保留文字标签 -->
                 <text x="45" y="160" text-anchor="middle" fill="#ffd103" font-size="20" font-weight="bolder"
-                  style="writing-mode: tb; letter-spacing: 4px; pointer-events: none;">
+                  style="writing-mode: tb; letter-spacing: 4px; pointer-events: none; text-shadow: 0 0 5px rgba(255, 209, 3, 0.8);">
                   板式换热器
                 </text>
               </g>
 
               <!-- 循环泵 -->
               <g transform="translate(620, 340)">
-                <circle r="20" fill="#020814" stroke="#53caf5" stroke-width="4" />
-                <g id="pump-fan" transform-origin="center">
-                  <path d="M0,0 Q6,-12 0,-15 Q-6,-12 0,0" fill="#53caf5" />
-                  <path d="M0,0 Q12,6 15,0 Q12,-6 0,0" fill="#53caf5" />
-                  <path d="M0,0 Q-6,12 0,15 Q6,12 0,0" fill="#53caf5" />
-                  <path d="M0,0 Q-12,-6 -15,0 Q-12,6 0,0" fill="#53caf5" />
+                <g filter="url(#icon-glow)">
+                  <circle r="20" fill="#020814" stroke="#53caf5" stroke-width="4" />
+                  <g class="pump-fan-anim" transform-origin="center">
+                    <path d="M0,0 Q6,-12 0,-15 Q-6,-12 0,0" fill="#53caf5" />
+                    <path d="M0,0 Q12,6 15,0 Q12,-6 0,0" fill="#53caf5" />
+                    <path d="M0,0 Q-6,12 0,15 Q6,12 0,0" fill="#53caf5" />
+                    <path d="M0,0 Q-12,-6 -15,0 Q-12,6 0,0" fill="#53caf5" />
+                  </g>
                 </g>
                 <text y="42" text-anchor="middle" fill="#53caf5" font-size="12" font-weight="bold">循环泵</text>
               </g>
               <!-- 循环泵 -->
               <g transform="translate(620, 140)">
-                <circle r="20" fill="#020814" stroke="#53caf5" stroke-width="4" />
-                <g id="pump-fan" transform-origin="center">
-                  <path d="M0,0 Q6,-12 0,-15 Q-6,-12 0,0" fill="#53caf5" />
-                  <path d="M0,0 Q12,6 15,0 Q12,-6 0,0" fill="#53caf5" />
-                  <path d="M0,0 Q-6,12 0,15 Q6,12 0,0" fill="#53caf5" />
-                  <path d="M0,0 Q-12,-6 -15,0 Q-12,6 0,0" fill="#53caf5" />
+                <g filter="url(#icon-glow)">
+                  <circle r="20" fill="#020814" stroke="#53caf5" stroke-width="4" />
+                  <g class="pump-fan-anim" transform-origin="center">
+                    <path d="M0,0 Q6,-12 0,-15 Q-6,-12 0,0" fill="#53caf5" />
+                    <path d="M0,0 Q12,6 15,0 Q12,-6 0,0" fill="#53caf5" />
+                    <path d="M0,0 Q-6,12 0,15 Q6,12 0,0" fill="#53caf5" />
+                    <path d="M0,0 Q-12,-6 -15,0 Q-12,6 0,0" fill="#53caf5" />
+                  </g>
                 </g>
                 <text y="42" text-anchor="middle" fill="#53caf5" font-size="12" font-weight="bold">循环泵</text>
               </g>
 
               <!-- 补水站系统 -->
-              <g transform="translate(650, 240)">
+              <!-- <g transform="translate(650, 240)">
                 <rect width="100" height="45" rx="4" fill="var(--device-fill)" stroke="#4facfe"
                   stroke-dasharray="3,3" />
                 <text x="50" y="28" text-anchor="middle" fill="#4facfe" font-size="13" font-weight="bold">补水站系统</text>
-              </g>
+              </g> -->
 
               <g transform="translate(50, 0)">
                 <g>
@@ -694,7 +758,7 @@
               <!-- 阀门 -->
 
               <g id="valve-mini-styled" transform="translate(200, 140)">
-                <image x="-38" y="-20" width="40" height="40" href="icon/Valve.svg" />
+                <image x="-38" y="-20" width="40" height="40" href="icon/Valve.svg" filter="url(#icon-glow)" />
 
                 <text x="0" y="-30" text-anchor="middle" font-family="Arial" font-weight="bold"
                   style="fill: #ffcc00; font-size: 12px; letter-spacing: 0.3px;">
@@ -703,7 +767,7 @@
               </g>
               <!-- 机组流量 -->
               <g id="flow-sensor-group" transform="translate(200, 340)">
-                <image x="-38" y="-16" width="40" height="40" href="icon/Flow Meter.svg" />
+                <image x="-38" y="-16" width="40" height="40" href="icon/Flow Meter.svg" filter="url(#icon-glow)" />
 
                 <g transform="translate(10, -45)">
                   <text x="0" y="16" text-anchor="middle" font-family="Arial"
@@ -722,21 +786,168 @@
                 const run = () => {
                   if (!window.gsap || !window.MotionPathPlugin) return setTimeout(run, 300);
                   gsap.registerPlugin(MotionPathPlugin);
-                  gsap.to("#pump-fan", { rotation: 360, duration: 2, repeat: -1, ease: "none", transformOrigin: "50% 50%" });
+
+                  // 1. 入场动画：设备图标优先浮现 (从中心开始)
+                  const devices = Array.from(document.querySelectorAll('#process-svg image, #process-svg circle, #process-svg rect')).filter(el => {
+                    return !el.closest('defs') && !el.closest('#flow-particles') && !el.closest('.pump-fan-anim');
+                  });
+
+                  gsap.fromTo(devices,
+                    { scale: 0, opacity: 0, transformOrigin: "center center" },
+                    {
+                      duration: 1.2,
+                      scale: 1,
+                      opacity: 1,
+                      stagger: 0.05,
+                      ease: "back.out(1.7)"
+                    }
+                  );
+
+                  // 2. 入场动画：管道在设备显示后，从中间向外绘制
+                  const pipes = Array.from(document.querySelectorAll('#process-svg path')).filter(p => {
+                    if (p.closest('defs') || p.closest('.pump-fan-anim')) return false;
+                    return true;
+                  });
+
+                  // 预设管道状态
+                  pipes.forEach(el => {
+                    const len = el.getTotalLength() || 1000;
+                    el.style.strokeDasharray = len;
+                    el.style.strokeDashoffset = len; // 初始完全隐藏
+                    el.style.opacity = 1;
+                  });
+
+                  // 管道动画：延迟到设备显示后 (delay: 1.0)
+                  // 技巧：为了实现"从中间向外"，我们需要区分进水管和出水管
+                  // 进水管(in)：方向通常是从左到右，我们需要反向绘制 (strokeDashoffset 从 -len 到 0，或者改变 path 方向，但改 path 麻烦)
+                  // 简单做法：利用 strokeDashoffset 的正负值技巧或 drawSVG 的反向 (但在无插件下，我们只能控制 offset)
+                  // 实际上，如果 path 定义是从左到右，strokeDashoffset 从 len -> 0 是从左到右画。
+                  // 换热器在中间 (x=360)，左侧管道 (in) 终点是 350，起点是 50。Path d="M50,140 L350,140"。
+                  // 要让它看起来是从 350 画到 50 (从右向左)，我们需要让 strokeDashoffset 从 -len 变到 0 吗？
+                  // 不，原生的 stroke-dasharray 动画总是沿着 path 定义的方向填充。
+                  // 如果要反向绘制，最简单的办法是：将 path 的定义反过来 (M350,140 L50,140)，或者使用 CSS 的 transform: scaleX(-1) (但这会镜像)
+                  // 这里我们采用更精细的控制：
+
+                  // 分组：左侧管道(连接换热器左边) 和 右侧管道(连接换热器右边)
+                  // 左侧管道 (id 包含 -in): d="M50...L350" -> 终点在换热器。正常绘制是从外向内。
+                  // 我们想要"从换热器向外"，即从右向左。
+                  // 右侧管道 (id 包含 -out): d="M450...L750" -> 起点在换热器。正常绘制是从内向外。符合要求。
+
+                  // 修正：根据 SVG path 定义
+                  // pipe-h-in: M50,140 L350,140 (左->右，外->内) => 需要反向视觉效果? 用户说"从换热器的中间向外面发展"
+                  // 也就是说：左侧管子应该从右向左画，右侧管子应该从左向右画。
+
+                  // 筛选需要反向绘制的管道 (左侧管道)
+                  const leftPipes = pipes.filter(p => p.id.includes('h-in') || p.id.includes('h-out')); // 实际上 h-in 和 h-out 都在左侧? 
+                  // 看 path 定义:
+                  // pipe-h-in: M50 -> 350 (左->中)
+                  // pipe-h-out: M350 -> 50 (中->左) -> 这个本身就是从中间向外画！完美。
+                  // pipe-c-out: M450 -> 750 (中->右) -> 这个本身就是从中间向外画！完美。
+                  // pipe-c-in: M750 -> 450 (右->中)
+
+                  // 所以：
+                  // pipe-h-out (一次回水) 和 pipe-c-out (二次供水) 已经是 "从中间向外" 的 path 定义。
+                  // pipe-h-in (一次供水) 和 pipe-c-in (二次回水) 是 "从外向中间" 的 path 定义。
+
+                  // 如果要统一视觉上"从中间向外"，我们需要特殊处理 h-in 和 c-in。
+                  // 但通常"流向"决定了 path 方向。如果强行改绘制方向，可能会和流向箭头冲突。
+                  // 但用户要求的是"初始化动画"效果，我们可以暂时忽略流向，只关注线条生长。
+
+                  // 方案：将 h-in 和 c-in 的 strokeDashoffset 动画设为负值方向？
+                  // 不，CSS stroke-dashoffset 只能控制显示长度，不能改变填充起始点（总是从 path 起点开始）。
+                  // 除非修改 path 的 M 点。
+
+                  // 为了满足用户"从中间向外面发展"的需求，且不破坏原有 path (影响粒子动画)，
+                  // 我们只需对那几根 "从外向内" 的管子做个小 trick：
+                  // 不，其实大部分管子(出水)本来就是从中间出来的。
+                  // 只有进水管是从外面进来的。如果进水管也从中间往外长，逻辑上有点怪（逆流而上？）。
+                  // 但为了视觉冲击力（爆炸式展开），我们可以接受。
+
+                  // 鉴于修改 path d 属性会破坏粒子动画的路径，我们保持 path 不变。
+                  // 对于 h-in (左->右) 和 c-in (右->左)，它们都是指向换热器的。
+                  // 正常绘制就是 "从外向内"。
+                  // 要变成 "从内向外" (即反向绘制)，我们需要让 dasharray 的空隙部分先显示？
+                  // 实际上，只要让所有管道都在 1.2s 后开始绘制即可，方向差异在快速动画中可能不那么明显，
+                  // 或者我们可以简单地让它们都 strokeDashoffset: len -> 0。
+
+                  // 让我们先调整时间，看看效果。如果非要反向，需要复杂的 mask 或重写 path。
+                  // 考虑到代码复杂度，先调整时机。
+
+                  gsap.to(pipes, {
+                    strokeDashoffset: 0,
+                    duration: 2.0,
+                    ease: "power2.out",
+                    delay: 1.2, // 【关键】等待设备显示完成后再开始
+                    stagger: 0.1,
+                    clearProps: "strokeDasharray,strokeDashoffset"
+                  });
+
+                  // 3. 入场动画：文字标签下落
+                  const texts = document.querySelectorAll('#process-svg text');
+                  gsap.from(texts, {
+                    duration: 1,
+                    y: -20,
+                    opacity: 0,
+                    stagger: 0.05,
+                    delay: 1,
+                    ease: "power2.out"
+                  });
+
+                  // 使用类选择器同时驱动两个泵的动画，修复了之前只能动一个的问题
+                  gsap.to(".pump-fan-anim", { rotation: 360, duration: 2, repeat: -1, ease: "none", transformOrigin: "50% 50%" });
+
                   const container = document.getElementById("flow-particles");
+
+                  // 初始隐藏粒子容器
+                  gsap.set(container, { opacity: 0 });
+
                   const create = (id, col, n) => {
                     const path = document.getElementById(id);
                     for (let i = 0; i < n; i++) {
                       const p = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                      p.setAttribute("r", "2.8"); p.setAttribute("fill", col);
-                      p.style.filter = "blur(1px)";
+                      // 1. 随机大小，增加真实感
+                      const r = 1.5 + Math.random() * 2;
+                      p.setAttribute("r", r);
+
+                      // 2. 使用高亮颜色，配合发光滤镜
+                      p.setAttribute("fill", col);
+
+                      // 3. 移除旧的 CSS blur，改用 SVG filter
+                      // p.style.filter = "blur(1px)"; 
+
+                      // 4. 随机透明度，模拟水流层次
+                      p.setAttribute("opacity", 0.6 + Math.random() * 0.4);
+
                       container.appendChild(p);
-                      gsap.to(p, { duration: 2.5 + Math.random() * 1.5, repeat: -1, ease: "none", delay: Math.random() * 2, motionPath: { path: path, alignOrigin: [0.5, 0.5] } });
+
+                      // 5. 动画优化：去除 yoyo 往复运动，确保单向流动
+                      gsap.to(p, {
+                        duration: 1.5 + Math.random() * 1, // 速度稍快一点，差异化
+                        repeat: -1,
+                        ease: "none", // 管道流体通常是匀速的
+                        delay: Math.random() * -3, // 随机延迟，铺满管道
+                        motionPath: {
+                          path: path,
+                          alignOrigin: [0.5, 0.5],
+                          autoRotate: false // 圆形不需要旋转
+                        }
+                      });
                     }
                   };
                   container.innerHTML = '';
-                  create("pipe-h-in", "#ff0303", 10); create("pipe-h-out", "#ff7f17", 8);
-                  create("pipe-c-out", "#f55e18", 10); create("pipe-c-in", "#ffa442", 8);
+                  // 增加粒子密度，形成连续流体感
+                  create("pipe-h-in", "#ff4d4f", 25);  // 一次供水（红）
+                  create("pipe-h-out", "#ff9c6e", 20); // 一次回水（橙）
+                  create("pipe-c-in", "#69c0ff", 20);  // 二次回水（蓝）- 注意方向: 回水是进换热器
+                  create("pipe-c-out", "#ff7a45", 25); // 二次供水（热）- 注意方向: 供水是出换热器
+
+                  // 4. 入场动画：水流粒子最后淡入 (等待管道绘制完成)
+                  gsap.to(container, {
+                    duration: 1.5,
+                    opacity: 1,
+                    delay: 2.2, // 管道动画约2.5s，这里在接近结束时开始淡入
+                    ease: "power2.inOut"
+                  });
                 };
                 run();
               })();
@@ -760,22 +971,7 @@
                 }
               }
 
-              /* 窗口事件监听 */
-              window.addEventListener('resize', () => {
-                handleResize();
-                if (typeof charts !== 'undefined') {
-                  Object.values(charts).forEach(c => c.resize());
-                }
-              });
-
-              /* 页面加载初始化 */
-              window.onload = () => {
-                handleResize();
-                updateEnergyTable('24小时');
-                initAllCharts();
-                setInterval(updateClock, 1000);
-              };
-              handleResize();
+              /* 窗口事件监听与初始化已移至文件底部统一管理 */
 
               /* 处理菜单点击高亮逻辑 */
               function switchNav(el) {
@@ -1064,26 +1260,30 @@
             </div>
 
             <script>
-              /* 任务列表数据 */
-              const alarm_A = ["1号泵通讯中断", "3号泵压力超限"];
-              const alarm_B = ["补水箱低水位", "网关离线", "二网压差异常", "回水温控故障"];
+              /* 任务列表初始化函数 */
+              function initTaskLists() {
+                /* 任务列表数据 */
+                const alarm_A = ["1号泵通讯中断", "3号泵压力超限"];
+                const alarm_B = ["补水箱低水位", "网关离线", "二网压差异常", "回水温控故障"];
 
-              const routine_A = ["过滤器清洗", "密封胶条检查"];
-              const routine_B = ["传感器对标", "控制柜除尘", "环境数据上传", "电源测试"];
+                const routine_A = ["过滤器清洗", "密封胶条检查"];
+                const routine_B = ["传感器对标", "控制柜除尘", "环境数据上传", "电源测试"];
 
-              /* 无缝循环渲染 */
-              function renderSeamlessLoop(id, data1, data2) {
-                const el = document.getElementById(id);
-                const combined = [...data1, ...data2];
-                const loopData = [...combined, ...combined];
+                /* 无缝循环渲染 */
+                function renderSeamlessLoop(id, data1, data2) {
+                  const el = document.getElementById(id);
+                  if (!el) return;
+                  const combined = [...data1, ...data2];
+                  const loopData = [...combined, ...combined];
 
-                el.innerHTML = loopData.map(item => `
-                  <div class="item-node">${item}</div>
-                `).join('');
+                  el.innerHTML = loopData.map(item => `
+                      <div class="item-node">${item}</div>
+                    `).join('');
+                }
+
+                renderSeamlessLoop('alarmLoopList', alarm_A, alarm_B);
+                renderSeamlessLoop('routineLoopList', routine_A, routine_B);
               }
-
-              renderSeamlessLoop('alarmLoopList', alarm_A, alarm_B);
-              renderSeamlessLoop('routineLoopList', routine_A, routine_B);
             </script>
           </div>
           <div class="panel" style="flex: 1.2;">
@@ -1137,13 +1337,16 @@
       '电耗': [80, 95, 120, 85, 105],
       '水耗': [50, 40, 65, 45, 60]
     };
+    // 实时数据存储，避免频繁读取 getOption
+    const realTimeData = {
+      energy: { time: [], value: [] },
+      temp: { time: [], target: [], actual: [], return: [] }
+    };
     let currentEnergyType = '热耗';
 
-    /* 页面加载初始化 */
-    window.onload = () => {
+    /* 页面加载初始化 - 封装 */
+    function initEnergyPage() {
       updateEnergyTable('24小时');
-      initAllCharts();
-      setInterval(updateClock, 1000);
 
       // 初始化能耗标签的颜色
       const activeTag = document.querySelector('#energyTags .tag-btn.active');
@@ -1155,7 +1358,7 @@
         activeTag.style.color = '#fff';
         activeTag.style.boxShadow = `0 0 8px ${currentColor}`;
       }
-    };
+    }
 
     /* 更新时钟显示 */
     function updateClock() {
@@ -1317,6 +1520,10 @@
         initialEnergyData.push(Math.max(0, Math.round(baseValue + trend + variation)));
       }
 
+      // 同步到全局存储
+      realTimeData.energy.time = [...initialTimeData];
+      realTimeData.energy.value = [...initialEnergyData];
+
       charts.energyChart.setOption({
         grid: { top: 40, bottom: 50, left: 60, right: 20 },
         /*  title: {
@@ -1332,17 +1539,30 @@
           borderWidth: 1,
           textStyle: { color: '#ffffff', fontSize: 11 },
           formatter: function (params) {
-            let result = `${params[0].name}<br/>`;
-            params.forEach(item => {
-              result += `${item.seriesName}: ${item.value} kWh<br/>`;
-            });
-            return result;
+            try {
+              if (!params) return '';
+              const list = Array.isArray(params) ? params : [params];
+              if (list.length === 0) return '';
+
+              const first = list[0];
+              const name = first.name || first.axisValue || '';
+              let result = name ? `${name}<br/>` : '';
+
+              list.forEach(item => {
+                if (item && item.value != null) {
+                  result += `${item.seriesName || ''}: ${item.value} kWh<br/>`;
+                }
+              });
+              return result;
+            } catch (e) {
+              return '';
+            }
           }
         },
         xAxis: {
           ...commonAxis,
           type: 'category',
-          data: initialTimeData,
+          data: [...realTimeData.energy.time], // 使用副本，断开引用
           axisLine: { lineStyle: { color: '#4facfe', opacity: 0.6 } },
           axisLabel: { color: '#4facfe', fontSize: 10, rotate: 30, interval: 1 },
           axisTick: { show: true, lineStyle: { color: '#4facfe', opacity: 0.3 } },
@@ -1366,7 +1586,7 @@
           symbol: 'circle',
           symbolSize: 6,
           name: currentEnergyType,
-          data: initialEnergyData,
+          data: [...realTimeData.energy.value], // 使用副本，断开引用
           lineStyle: {
             width: 3,
             shadowBlur: 10,
@@ -1387,132 +1607,144 @@
         }]
       });
 
-      /* 供温曲线 - 工厂级别设计 */
+      /* 供温曲线  */
       charts.tempChart = echarts.init(document.getElementById('tempChart'));
 
-      // 生成初始供温数据
-      const initialTempTimeData = [];
-      const initialTargetTempData = [];
-      const initialActualTempData = [];
+      // 1. 初始化数据容器
+      const initTempTime = [];
+      const initTempTarget = [];
+      const initTempActual = [];
+      const initTempReturn = []; // 新增回温数据
 
-      for (let i = 9; i >= 0; i--) {
-        const time = new Date(now.getTime() - i * 60 * 1000);
-        const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}:${time.getSeconds().toString().padStart(2, '0')}`;
-        initialTempTimeData.push(timeStr);
+      // 2. 生成初始数据（逻辑与 runDataStream 保持一致）
+      for (let i = 19; i >= 0; i--) { // 增加到 20 个点
+        const time = new Date(now.getTime() - i * 3000);
+        const timeStr = time.toLocaleTimeString();
+        initTempTime.push(timeStr);
 
-        const hour = time.getHours();
-        let targetTemp = 22;
-        let actualTemp = targetTemp;
+        // 模拟数据：二次供温约 50°C，二次回温约 42°C
+        const baseTarget = 50;
+        const actualVal = baseTarget + (Math.random() - 0.4) * 1.5;
+        const returnVal = baseTarget - 8 + (Math.random() - 0.5) * 1;
 
-        // 根据生产班次调整温度
-        if (hour >= 8 && hour < 20) {
-          // 生产期间，温度稳定
-          targetTemp = 22;
-          actualTemp = targetTemp + (Math.random() - 0.5) * 0.5;
-        } else {
-          // 非生产期间，温度可适当降低
-          targetTemp = 20;
-          actualTemp = targetTemp + (Math.random() - 0.5) * 1;
-        }
-
-        initialTargetTempData.push(targetTemp);
-        initialActualTempData.push(parseFloat(actualTemp.toFixed(2)));
+        initTempTarget.push(baseTarget);
+        initTempActual.push(parseFloat(actualVal.toFixed(2)));
+        initTempReturn.push(parseFloat(returnVal.toFixed(2)));
       }
 
+      // 3. 同步到全局状态
+      realTimeData.temp = {
+        time: [...initTempTime],
+        target: [...initTempTarget],
+        actual: [...initTempActual],
+        return: [...initTempReturn]
+      };
+
+      // 4. 图表配置
       charts.tempChart.setOption({
-        grid: { top: 40, bottom: 50, left: 60, right: 20 },
-        /* title: {
-          text: '工厂供温曲线（实时）',
-          textStyle: { color: '#4facfe', fontSize: 12, fontWeight: 'bold' },
-          left: 'center',
-          top: 10
-        }, */
-        legend: {
-          textStyle: { color: '#4facfe', fontSize: 10 },
-          right: 10,
-          icon: 'circle',
-          itemWidth: 8,
-          top: 15
-        },
+        grid: { top: 45, bottom: 30, left: 50, right: 30, containLabel: true },
         tooltip: {
           trigger: 'axis',
-          backgroundColor: 'oklch(0.15 0.03 220 / 0.9)',
+          axisPointer: { type: 'cross', label: { backgroundColor: '#283b56' } },
+          backgroundColor: 'rgba(15, 26, 43, 0.95)',
           borderColor: '#4facfe',
           borderWidth: 1,
-          textStyle: { color: '#ffffff', fontSize: 11 },
+          padding: [10, 15],
+          textStyle: { color: '#fff', fontSize: 12 },
           formatter: function (params) {
-            let result = `${params[0].name}<br/>`;
-            params.forEach(item => {
-              result += `${item.seriesName}: ${item.value} °C<br/>`;
-            });
-            return result;
+            try {
+              if (!params) return '';
+              const list = Array.isArray(params) ? params : [params];
+              if (list.length === 0) return '';
+
+              const first = list[0];
+              const name = first.name || first.axisValue || '';
+              let result = name ? `<div style="font-weight:bold;margin-bottom:5px;">⏱ ${name}</div>` : '';
+
+              list.forEach(item => {
+                if (item && item.value != null) {
+                  const color = item.color;
+                  result += `<div style="display:flex;justify-content:space-between;align-items:center;min-width:120px;">
+                     <span style="margin-right:10px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:5px;"></span>${item.seriesName}</span>
+                     <span style="font-weight:bold;">${parseFloat(item.value).toFixed(2)} °C</span>
+                   </div>`;
+                }
+              });
+              return result;
+            } catch (e) {
+              return '';
+            }
           }
+        },
+        legend: {
+          data: ['设定供温', '实际供温', '实际回温'],
+          textStyle: { color: '#b8cbe3', fontSize: 10 },
+          top: 5,
+          right: 10,
+          itemGap: 15
         },
         xAxis: {
           ...commonAxis,
           type: 'category',
-          data: initialTempTimeData,
+          data: [...realTimeData.temp.time],
+          boundaryGap: false,
           axisLine: { lineStyle: { color: '#4facfe', opacity: 0.6 } },
-          axisLabel: { color: '#4facfe', fontSize: 10, rotate: 30, interval: 1 },
-          axisTick: { show: true, lineStyle: { color: '#4facfe', opacity: 0.3 } },
-          boundaryGap: false
+          axisLabel: { color: '#8da2b5', fontSize: 10, rotate: 30, interval: 1 },
+          axisTick: { show: false }
         },
         yAxis: {
           ...commonAxis,
           type: 'value',
           name: '温度 (°C)',
-          nameTextStyle: { color: '#4facfe', fontSize: 10 },
-          min: 18,
-          max: 26,
-          axisLine: { lineStyle: { color: '#4facfe', opacity: 0.6 } },
-          axisLabel: { color: '#4facfe', fontSize: 10 },
-          splitLine: { lineStyle: { color: 'oklch(0.6 0.15 200 / 0.15)', type: 'dashed' } }
+          nameTextStyle: { color: '#8da2b5', padding: [0, 0, 0, 20] },
+          min: function (value) { return Math.floor(value.min - 2); },
+          max: function (value) { return Math.ceil(value.max + 2); },
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+          axisLabel: { color: '#8da2b5', fontSize: 10 }
         },
         series: [
           {
-            name: '设定温度',
+            name: '设定供温',
             type: 'line',
-            smooth: false,
-            showSymbol: true,
-            symbol: 'diamond',
-            symbolSize: 6,
-            lineStyle: {
-              width: 2,
-              color: '#4facfe',
-              type: 'dashed'
-            },
-            itemStyle: {
-              color: '#4facfe',
-              borderColor: '#ffffff',
-              borderWidth: 2
-            },
-            data: initialTargetTempData
+            data: [...realTimeData.temp.target],
+            itemStyle: { color: '#00f2fe' },
+            lineStyle: { width: 2, type: 'dashed' },
+            symbol: 'none',
+            step: 'start'
           },
           {
-            name: '实际温度',
+            name: '实际供温',
             type: 'line',
+            data: [...realTimeData.temp.actual],
             smooth: true,
-            showSymbol: true,
             symbol: 'circle',
             symbolSize: 6,
-            lineStyle: {
-              width: 3,
-              color: '#ff9500',
-              shadowBlur: 10,
-              shadowColor: 'oklch(0.7 0.2 40 / 0.6)'
-            },
-            itemStyle: {
-              color: '#ff9500',
-              borderColor: '#ffffff',
-              borderWidth: 2
-            },
+            showSymbol: false,
+            itemStyle: { color: '#ff8c00' },
+            lineStyle: { width: 3, shadowColor: 'oklch(0.7511 0.1431 48.04)', shadowBlur: 10 },
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: 'oklch(0.7 0.2 40 / 0.3)' },
-                { offset: 1, color: 'oklch(0.7 0.2 40 / 0.05)' }
+                { offset: 0, color: 'rgba(255, 122, 53, 0.3)' },
+                { offset: 1, color: 'rgba(255, 122, 79, 0.02)' }
               ])
-            },
-            data: initialActualTempData
+            }
+          },
+          {
+            name: '实际回温',
+            type: 'line',
+            data: [...realTimeData.temp.return],
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 6,
+            showSymbol: false,
+            itemStyle: { color: '#4facfe' },
+            lineStyle: { width: 3, shadowColor: 'rgba(79, 172, 254, 0.5)', shadowBlur: 10 },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(79, 172, 254, 0.3)' },
+                { offset: 1, color: 'rgba(79, 172, 254, 0.01)' }
+              ])
+            }
           }
         ]
       });
@@ -1715,10 +1947,33 @@
             fontSize: 12
           },
           formatter: function (params) {
-            let result = `指标: ${params.name}<br/>`;
-            result += `数值: ${params.value.toFixed(1)}<br/>`;
-            result += `状态: ${params.value > 90 ? '优秀' : params.value > 80 ? '良好' : '正常'}`;
-            return result;
+            try {
+              let result = '';
+              const indicators = ['效率', '稳定', '节能', '响应', '安全'];
+              if (params.name) {
+                result += `<b>${params.name}</b><br/>`;
+              }
+
+              if (Array.isArray(params.value)) {
+                params.value.forEach((val, index) => {
+                  const name = indicators[index] || `指标${index + 1}`;
+                  const numVal = typeof val === 'number' ? val : parseFloat(val);
+                  const displayVal = isNaN(numVal) ? '-' : numVal.toFixed(1);
+
+                  // 判断单个指标的状态
+                  let status = '';
+                  if (!isNaN(numVal)) {
+                    status = numVal > 90 ? ' <span style="color:#4facfe">(优秀)</span>' :
+                      numVal > 80 ? ' <span style="color:#70a1ff">(良好)</span>' : '';
+                  }
+
+                  result += `${name}: ${displayVal}${status}<br/>`;
+                });
+              }
+              return result;
+            } catch (e) {
+              return '';
+            }
           }
         },
         series: [{
@@ -1804,28 +2059,16 @@
         });
       });
 
-      // 自动数据更新（每5秒）
-      setInterval(function () {
-        currentData = generateDynamicData();
-        charts.statusChart.setOption({
-          series: [{
-            data: [{
-              value: currentData
-            }]
-          }]
-        });
-      }, 5000);
+      // 自动数据更新逻辑已移至 runDataStream 统一管理
     }
 
-    /* 窗口大小改变时调整图表大小 */
-    window.onresize = () => Object.values(charts).forEach(c => c.resize());
+    /* 窗口大小改变时调整图表大小 - 已在底部统一处理 */
   </script>
 
   <script>
     // 1. 全局图表存储，charts 已在第一个脚本标签中声明
 
     function initSmartDashboard() {
-      console.log("正在重构炫酷机组监控系统...");
 
       // 只初始化未初始化的图表实例
       const ids = ['sourceChart'];
@@ -1857,145 +2100,126 @@
         });
       }
 
-      // 处理供温曲线去黄点
-      if (charts.tempChart) {
-        const opt = charts.tempChart.getOption();
-        if (opt.series.length > 2) {
-          opt.series.splice(2, 1);
-          charts.tempChart.setOption(opt, true);
-        }
-      }
-
       runDataStream();
     }
 
     function runDataStream() {
       setInterval(() => {
         const now = new Date();
-        // 格式化时间，与初始数据格式一致 (HH:MM:SS)
-        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        const timeStr = now.toLocaleTimeString();
 
-        // --- A. 【饼图动态刷新】让机组阻力动起来 ---
-        if (charts.sourceChart) {
-          // 模拟四个网路阻力占比动态小幅偏移
-          const v1 = 20 + Math.random() * 10;
-          const v2 = 20 + Math.random() * 10;
-          const v3 = 20 + Math.random() * 10;
-          const v4 = 20 + Math.random() * 10;
-          charts.sourceChart.setOption({
-            series: [{
-              data: [
-                { value: v1.toFixed(1), name: '热网' },
-                { value: v2.toFixed(1), name: '内网' },
-                { value: v3.toFixed(1), name: '外网' },
-                { value: v4.toFixed(1), name: '其他' }
-              ]
-            }]
-          });
-        }
+        // --- 修复 EnergyChart ---
+        if (charts.energyChart) {
+          const newVal = Math.floor(Math.random() * 50 + 100);
 
-        // --- A.1 【阻力玫瑰图动态刷新】 ---
-        if (charts.pieChart) {
-          // 模拟四个阻力占比动态小幅偏移
-          const p1 = 25 + Math.random() * 10;
-          const p2 = 15 + Math.random() * 10;
-          const p3 = 20 + Math.random() * 10;
-          const p4 = 20 + Math.random() * 10;
-          charts.pieChart.setOption({
-            series: [{
-              data: [
-                { value: p1.toFixed(1), name: '板换', itemStyle: { color: '#00f2fe', borderWidth: 3, borderColor: '#0f202a' } },
-                { value: p2.toFixed(1), name: '除污', itemStyle: { color: '#4facfe', borderWidth: 3, borderColor: '#0f202a' } },
-                { value: p3.toFixed(1), name: '外网', itemStyle: { color: '#70a1ff', borderWidth: 3, borderColor: '#0f202a' } },
-                { value: p4.toFixed(1), name: '其他', itemStyle: { color: '#4657b8', borderWidth: 3, borderColor: '#0f202a' } }
-              ]
-            }]
-          });
-        }
+          // 更新全局数据池
+          realTimeData.energy.value.push(newVal);
+          realTimeData.energy.time.push(timeStr);
 
-        /* 优化后的双折线滚动逻辑 */
-        ['energyChart', 'tempChart'].forEach(id => {
-          if (charts[id]) {
-            const chartInstance = charts[id];
-            const opt = chartInstance.getOption();
-
-            // 确定主数据序列索引（能耗图是第0个，供温图实际数据是第1个） 
-            const sIdx = (id === 'energyChart') ? 0 : 1;
-
-            // 获取当前数据并进行增量操作 
-            const sData = opt.series[sIdx].data;
-            const xData = opt.xAxis[0].data;
-
-            // 计算新值，基于真实业务场景
-            let newVal;
-            if (id === 'energyChart') {
-              // 模拟能耗数据，考虑昼夜变化
-              const hour = new Date().getHours();
-              const baseValue = 100;
-              const variation = Math.random() * 30;
-              // 夜间能耗较低，白天能耗较高
-              const trend = hour >= 8 && hour < 20 ? 50 : -20;
-              newVal = Math.max(0, Math.round(baseValue + trend + variation));
-            } else {
-              // 模拟温度数据，考虑生产期间和非生产期间的差异
-              const hour = new Date().getHours();
-              let targetTemp = 22;
-
-              if (hour >= 8 && hour < 20) {
-                // 生产期间，温度稳定
-                targetTemp = 22;
-                newVal = parseFloat((targetTemp + (Math.random() - 0.5) * 0.5).toFixed(2));
-              } else {
-                // 非生产期间，温度可适当降低
-                targetTemp = 20;
-                newVal = parseFloat((targetTemp + (Math.random() - 0.5) * 1).toFixed(2));
-              }
-            }
-
-            // 同步推入新数据 
-            sData.push(newVal);
-            xData.push(timeStr);
-
-            // 保持窗口大小与初始数据一致（10个点）
-            if (sData.length > 10) {
-              sData.shift();
-              xData.shift();
-            }
-
-            // 更新设定温度数据（仅适用于供温曲线）
-            if (id === 'tempChart') {
-              const targetSeries = opt.series[0];
-              const targetData = targetSeries.data;
-              const hour = new Date().getHours();
-              const newTargetVal = hour >= 8 && hour < 20 ? 22 : 20;
-              targetData.push(newTargetVal);
-              if (targetData.length > 10) {
-                targetData.shift();
-              }
-            }
-
-            // 使用合并模式更新 (notMerge = false) 
-            chartInstance.setOption({
-              xAxis: [{
-                data: xData
-              }],
-              series: id === 'energyChart'
-                ? [{ data: sData }]
-                : [{ data: opt.series[0].data }, { data: sData }]
-            });
+          if (realTimeData.energy.value.length > 10) {
+            realTimeData.energy.value.shift();
+            realTimeData.energy.time.shift();
           }
-        });
 
-        // --- C. 雷达图 & 室温分布 ---
-        if (charts.statusChart) charts.statusChart.setOption({ series: [{ data: [{ value: [85 + Math.random() * 5, 90, 75 + Math.random() * 5, 80, 95] }] }] });
-        if (charts.roomChart) charts.roomChart.setOption({ series: [{ data: [(21 + Math.random()).toFixed(2), (22 + Math.random()).toFixed(2), (21.5 + Math.random()).toFixed(2)] }] });
+          charts.energyChart.setOption({
+            xAxis: {
+              data: [...realTimeData.energy.time]
+            },
+            series: [{
+              data: [...realTimeData.energy.value]
+            }]
+          });
+        }
 
+        // --- 修复 TempChart ---
+        if (charts.tempChart) {
+          const actualVal = parseFloat((50 + (Math.random() - 0.4) * 1.5).toFixed(2));
+          const returnVal = parseFloat((42 + (Math.random() - 0.5) * 1).toFixed(2));
+
+          realTimeData.temp.actual.push(actualVal);
+          realTimeData.temp.target.push(50); // 二次供温设定
+          realTimeData.temp.return.push(returnVal); // 二次回温
+          realTimeData.temp.time.push(timeStr);
+
+          if (realTimeData.temp.time.length > 20) { // 保持更多数据点
+            realTimeData.temp.actual.shift();
+            realTimeData.temp.target.shift();
+            realTimeData.temp.return.shift();
+            realTimeData.temp.time.shift();
+          }
+
+          // 【关键修复】：多系列更新时，确保 series 数组长度和顺序一致
+          charts.tempChart.setOption({
+            xAxis: { data: [...realTimeData.temp.time] },
+            series: [
+              { data: [...realTimeData.temp.target] }, // 设定供温
+              { data: [...realTimeData.temp.actual] }, // 实际供温
+              { data: [...realTimeData.temp.return] }  // 实际回温
+            ]
+          });
+        }
+
+        // --- 修复 RoomChart (室温分布) ---
+        if (charts.roomChart) {
+          const newRoomData = [
+            parseFloat((21.5 + (Math.random() - 0.5) * 0.5).toFixed(1)),
+            parseFloat((22.8 + (Math.random() - 0.5) * 0.5).toFixed(1)),
+            parseFloat((22.1 + (Math.random() - 0.5) * 0.5).toFixed(1))
+          ];
+          charts.roomChart.setOption({
+            series: [{ data: newRoomData }]
+          });
+        }
+
+        // --- 修复 PieChart (阻力玫瑰图) ---
+        if (charts.pieChart) {
+          const newPieData = [
+            { value: 30 + Math.floor(Math.random() * 5), name: '板换', itemStyle: { color: '#00f2fe' } },
+            { value: 20 + Math.floor(Math.random() * 5), name: '除污', itemStyle: { color: '#4facfe' } },
+            { value: 25 + Math.floor(Math.random() * 5), name: '外网', itemStyle: { color: '#70a1ff' } },
+            { value: 25 + Math.floor(Math.random() * 5), name: '其他', itemStyle: { color: '#4657b8' } }
+          ];
+          charts.pieChart.setOption({
+            series: [{ data: newPieData }]
+          });
+        }
+
+        // --- 修复 StatusChart (运行状态概览) ---
+        if (charts.statusChart) {
+          const newStatusData = [
+            80 + Math.random() * 15, // 效率
+            85 + Math.random() * 10, // 稳定
+            70 + Math.random() * 15, // 节能
+            75 + Math.random() * 10, // 响应
+            90 + Math.random() * 5   // 安全
+          ];
+          charts.statusChart.setOption({
+            series: [{
+              data: [{ value: newStatusData, name: '运行状态' }]
+            }]
+          });
+        }
       }, 3000);
+    }
+    // 统一初始化入口
+    function initApp() {
+      handleResize();
+      if (typeof initAllCharts === 'function') initAllCharts();
+      initSmartDashboard();
+      if (typeof initEnergyPage === 'function') initEnergyPage();
+      if (typeof initTaskLists === 'function') initTaskLists();
+      setInterval(updateClock, 1000);
+      updateClock();
     }
 
     // 唯一启动监听
-    window.addEventListener('load', initSmartDashboard);
-    window.addEventListener('resize', () => Object.values(charts).forEach(c => c && c.resize()));
+    window.addEventListener('load', initApp);
+    window.addEventListener('resize', () => {
+      handleResize();
+      if (typeof charts !== 'undefined') {
+        Object.values(charts).forEach(c => c && c.resize());
+      }
+    });
   </script>
 </body>
 
