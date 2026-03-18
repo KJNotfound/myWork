@@ -4,11 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <title>健康监测分析 - 智慧换热站</title>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <link rel="stylesheet" href="//at.alicdn.com/t/c/font_5115287_4bas6dl1f8f.css">
+  <script src="libs/vue.global.js"></script>
+  <link rel="stylesheet" href="fonts/iconfont.css">
+
+  <!-- 主题配置 -->
+  <script src="theme-config.js"></script>
 
   <style>
-    /* --- 全局变量与基础样式 (保持与主页一致) --- */
+    /* 在线链接服务仅供平台体验和调试使用，平台不承诺服务的稳定性，企业客户需下载字体包自行发布使用并做好备份。 */
+
+    /* --- 1. 全局样式 (完全复刻原文件) --- */
     :root {
       --bg-color: #0f1a2b;
       --panel-bg: rgba(16, 42, 67, 0.6);
@@ -32,43 +37,134 @@
       color: var(--text-primary);
       font-family: "Microsoft YaHei", sans-serif;
       overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      /* 防止滚动条 */
+      transition: opacity 0.2s ease-in-out;
     }
 
-    /* 主容器 */
-    .monitor-container {
-      width: 1920px;
-      height: 1080px;
-      background: radial-gradient(circle at center, #1b3352 0%, #0a1524 100%);
+    /* --- 2. 侧边导航栏 --- */
+    .side-nav {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 110px;
+      height: 100%;
+      background: #081221;
+      border-right: 1px solid var(--accent-blue);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding-top: 60px;
+      transform: none !important;
+    }
+
+    .nav-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 15px 0;
+      position: relative;
+      transition: all 0.3s ease;
+      color: oklch(1 0 0 / 0.6);
+    }
+
+    .nav-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      writing-mode: horizontal-tb !important;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      letter-spacing: 1px;
+      opacity: 1 !important;
+      display: block;
+    }
+
+    /* 导航交互状态 */
+    .nav-item:hover,
+    .nav-item.active {
+      background: oklch(0.6 0.15 200 / 0.15);
+      color: #4facfe;
+    }
+
+    .nav-item.active .nav-label {
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.1);
+    }
+
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #4facfe;
+      box-shadow: 0 0 10px #4facfe;
+    }
+
+    /* --- 3. 主内容区域 --- */
+    .main-container {
+      flex: 1;
+      margin-left: 110px;
       display: flex;
       flex-direction: column;
       padding: 20px;
       gap: 15px;
-      transform-origin: center center;
     }
 
-    /* --- 1. 顶部：监测概览与控制区 --- */
+    /* --- 4. 布局容器 (核心修改：与原文件保持一致的绝对定位布局) --- */
+    .dashboard-root {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: left top;
+      /* 关键：从左上角缩放 */
+      display: flex;
+      background-color: #0c1626
+    }
+
+    /* --- 3. 顶部 Header --- */
     .header-section {
-      height: 140px;
+      height: 120px;
       background: var(--panel-bg);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 20px 40px;
+      border-radius: 4px;
+      padding: 0 40px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       position: relative;
-      backdrop-filter: blur(10px);
     }
 
-    /* 进度条/评分栏 */
+    /* 进度条 */
     .progress-wrapper {
       width: 100%;
-      height: 40px;
+      height: 30px;
       display: flex;
       align-items: center;
       gap: 20px;
@@ -76,11 +172,10 @@
 
     .progress-track {
       flex: 1;
-      height: 12px;
+      height: 10px;
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
+      border-radius: 5px;
       overflow: hidden;
-      position: relative;
     }
 
     .progress-bar {
@@ -88,52 +183,32 @@
       background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
       width: 0%;
       transition: width 0.3s ease;
-      position: relative;
       box-shadow: 0 0 10px var(--accent-cyan);
     }
 
-    /* 扫描动画光效 */
-    .progress-bar::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 10px;
-      background: #fff;
-      box-shadow: 0 0 15px #fff;
-      filter: blur(2px);
-    }
-
     .score-display {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: bold;
       color: var(--accent-cyan);
-      text-shadow: 0 0 15px var(--accent-cyan);
       min-width: 120px;
       text-align: right;
     }
 
-    /* 数据统计行 */
+    /* 统计行 */
     .stats-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
+      margin-top: 15px;
       font-size: 16px;
       color: var(--text-secondary);
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     .stat-val {
       color: #fff;
       font-weight: bold;
       font-size: 18px;
+      margin-left: 5px;
     }
 
     .stat-val.danger {
@@ -142,45 +217,41 @@
     }
 
     .btn-restart {
-      padding: 8px 24px;
+      padding: 6px 20px;
       background: rgba(0, 242, 254, 0.15);
       border: 1px solid var(--accent-cyan);
       color: var(--accent-cyan);
-      font-size: 14px;
       cursor: pointer;
       border-radius: 4px;
       transition: all 0.3s;
-      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
     }
 
     .btn-restart:hover {
       background: var(--accent-cyan);
       color: #000;
-      box-shadow: 0 0 20px var(--accent-cyan);
     }
 
-    /* --- 主内容区：左右分栏 --- */
+    /* --- 4. 主内容区 --- */
     .main-content {
       flex: 1;
       display: flex;
-      gap: 20px;
+      gap: 15px;
       overflow: hidden;
-      /* 防止溢出 */
     }
 
-    /* --- 2. 左侧：分层监测结果列表 --- */
+    /* 左侧列表 */
     .left-panel {
       flex: 0.4;
       background: var(--panel-bg);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 4px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
     .panel-title {
-      height: 50px;
+      height: 48px;
       background: rgba(0, 0, 0, 0.3);
       border-bottom: 1px solid var(--border-color);
       display: flex;
@@ -189,7 +260,6 @@
       font-size: 18px;
       font-weight: bold;
       color: var(--accent-blue);
-      letter-spacing: 1px;
     }
 
     .accordion-container {
@@ -198,31 +268,25 @@
       padding: 10px;
     }
 
-    /* 滚动条隐藏 */
     .accordion-container::-webkit-scrollbar {
       width: 4px;
     }
 
     .accordion-container::-webkit-scrollbar-thumb {
       background: var(--border-color);
-      border-radius: 2px;
     }
 
     .acc-item {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
       background: rgba(0, 0, 0, 0.2);
-      transition: all 0.3s;
     }
 
     .acc-header {
-      padding: 15px;
+      padding: 12px 15px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.02);
     }
 
     .acc-header:hover {
@@ -234,23 +298,6 @@
       color: #fff;
     }
 
-    .acc-count {
-      color: var(--accent-red);
-      font-size: 14px;
-      margin-right: 10px;
-      font-weight: bold;
-    }
-
-    .acc-arrow {
-      transition: transform 0.3s;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .acc-arrow.open {
-      transform: rotate(180deg);
-    }
-
     .acc-body {
       max-height: 0;
       overflow: hidden;
@@ -258,19 +305,16 @@
     }
 
     .acc-body.open {
-      max-height: 500px;
-      /* 足够大即可 */
+      max-height: 600px;
     }
 
     .error-item {
-      padding: 12px 15px 12px 30px;
+      padding: 10px 15px 10px 30px;
       border-top: 1px dashed rgba(255, 255, 255, 0.1);
       color: var(--text-secondary);
-      font-size: 14px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
       transition: all 0.2s;
+      font-size: 14px;
     }
 
     .error-item:hover,
@@ -278,26 +322,16 @@
       background: rgba(255, 51, 0, 0.1);
       color: #fff;
       border-left: 3px solid var(--accent-red);
-      padding-left: 27px;
-      /* 调整内边距保持文字位置 */
     }
 
-    .error-item::before {
-      content: '●';
-      color: var(--accent-red);
-      margin-right: 10px;
-      font-size: 10px;
-    }
-
-    /* --- 3. 右侧：AI 交互与决策区 --- */
+    /* 右侧 AI 区 */
     .right-panel {
       flex: 0.6;
       background: var(--panel-bg);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 4px;
       display: flex;
       flex-direction: column;
-      position: relative;
     }
 
     .chat-container {
@@ -306,19 +340,13 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 15px;
     }
 
-    /* 聊天气泡 */
     .chat-msg {
       display: flex;
       gap: 15px;
-      max-width: 85%;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .chat-msg.ai {
-      align-self: flex-start;
+      max-width: 90%;
     }
 
     .chat-msg.user {
@@ -327,8 +355,8 @@
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: #000;
       border: 1px solid var(--accent-blue);
@@ -342,12 +370,11 @@
     .msg-content {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 15px;
+      padding: 12px 15px;
       border-radius: 8px;
       color: #fff;
       font-size: 14px;
       line-height: 1.6;
-      position: relative;
     }
 
     .chat-msg.ai .msg-content {
@@ -360,24 +387,15 @@
       background: rgba(79, 172, 254, 0.2);
     }
 
-    /* 操作按钮区 */
-    .action-area {
-      margin-top: 15px;
-      display: flex;
-      gap: 10px;
-    }
-
     .btn-action {
-      padding: 6px 15px;
+      margin-top: 10px;
+      padding: 5px 12px;
       font-size: 12px;
-      background: transparent;
       border: 1px solid var(--accent-red);
       color: var(--accent-red);
-      border-radius: 20px;
+      border-radius: 15px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      background: transparent;
       transition: all 0.3s;
     }
 
@@ -396,142 +414,274 @@
       background: transparent;
     }
 
-    /* 底部输入框 */
     .input-area {
-      height: 70px;
+      height: 60px;
       border-top: 1px solid var(--border-color);
       padding: 0 20px;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 10px;
       background: rgba(0, 0, 0, 0.2);
     }
 
     .chat-input {
       flex: 1;
-      height: 40px;
+      height: 36px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 0 20px;
+      border-radius: 18px;
+      padding: 0 15px;
       color: #fff;
       outline: none;
     }
 
     .btn-send {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: var(--accent-blue);
       border: none;
       color: #fff;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* 白天模式样式 */
+    .light-mode {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
     }
+
+    .light-mode .dashboard-container {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .health-panel {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .panel-header {
+      background: rgba(248, 250, 252, 0.9) !important;
+      color: #1e40af !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .health-score {
+      color: #1e40af !important;
+    }
+
+    .light-mode .health-value {
+      color: #1e293b !important;
+    }
+
+    .light-mode .health-label {
+      color: #64748b !important;
+    }
+
+    .light-mode .metric-item {
+      background: rgba(248, 250, 252, 0.5) !important;
+      border-color: rgba(37, 99, 235, 0.2) !important;
+    }
+
+    .light-mode .status-indicator {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    
+    /* 白天模式样式支持 */
+    body.light-mode {
+      --bg-color: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --border-color: rgba(37, 99, 235, 0.3);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    body.light-mode .dashboard-root {
+      background-color: #f8fafc;
+    }
+
+    body.light-mode .side-nav {
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    
+    body.light-mode .nav-item {
+      color: #64748b;
+    }
+    
+    body.light-mode .nav-item:hover,
+    body.light-mode .nav-item.active {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+    }
+    
+    body.light-mode .nav-item .iconfont {
+      color: #94a3b8;
+    }
+    
+    body.light-mode .nav-item:hover .iconfont,
+    body.light-mode .nav-item.active .iconfont {
+      color: #2563eb;
+    }
+
+    body.light-mode .nav-item.active .nav-label {
+      color: #2563eb !important;
+      font-weight: bold;
+    }
+
+    body.light-mode .nav-item.active::after {
+      background: #2563eb;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    }
+
+    body.light-mode .glass-panel,
+    body.light-mode .header-section,
+    body.light-mode .stats-card,
+    body.light-mode .detail-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(37, 99, 235, 0.2);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    body.light-mode .progress-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    body.light-mode .score-display {
+      color: #1e40af;
+    }
+
+    body.light-mode .stat-label {
+      color: #64748b;
+    }
+
+    body.light-mode .stat-value {
+      color: #1e293b;
+    }
+
+    body.light-mode .card-header {
+      border-bottom-color: rgba(37, 99, 235, 0.1);
+    }
+
+    body.light-mode .card-title {
+      color: #1e40af;
+    }
+
+
+    
   </style>
 </head>
 
 <body>
-
-  <div id="app" class="monitor-container">
-
-    <div class="header-section">
-      <div class="progress-wrapper">
-        <div v-if="isScanning" class="progress-track">
-          <div class="progress-bar" :style="{ width: scanProgress + '%' }"></div>
+  <!-- 主题切换按钮 -->
+  <div id="app" class="dashboard-root">
+    <aside class="side-nav">
+      <div class="nav-wrapper">
+        <div class="nav-item" onclick="window.location.href='home.html'">
+          <i class="iconfont nav-icon">&#xe603;</i>
+          <div class="nav-label">首页</div>
         </div>
-        <div v-else class="score-display">
-          健康评分: <span :style="{ color: healthScore > 80 ? 'var(--accent-green)' : 'var(--accent-red)' }">{{ healthScore
-            }}</span>
+        <div class="nav-item" onclick="window.location.href='smart_heating_station_terminal.html'">
+          <i class="iconfont nav-icon">&#xe84a;</i>
+          <div class="nav-label">我的换热站</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='station_patrol.html'">
+          <i class="iconfont nav-icon">&#xe65c;</i>
+          <div class="nav-label">一键巡站</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='station_startup.html'">
+          <i class="iconfont nav-icon">&#xe6db;</i>
+          <div class="nav-label">一键启停</div>
+        </div>
+        <div class="nav-item active" onclick="window.location.href='health_monitor.html'">
+          <i class="iconfont nav-icon">&#xe61f;</i>
+          <div class="nav-label">健康监测</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='asset_inventory.html'">
+          <i class="iconfont nav-icon">&#xe668;</i>
+          <div class="nav-label">资产盘点</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='system_settings.html'">
+          <i class="iconfont nav-icon">&#xe602;</i>
+          <div class="nav-label">系统设置</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-container">
+      <div class="header-section">
+        <div class="progress-wrapper">
+          <div v-if="isScanning" class="progress-track">
+            <div class="progress-bar" :style="{ width: scanProgress + '%' }"></div>
+          </div>
+          <div v-else class="score-display">
+            健康评分: <span :style="{ color: healthScore > 80 ? 'var(--accent-green)' : 'var(--accent-red)' }">{{
+              healthScore
+              }}</span>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div><span>监测对象：</span><span class="stat-val">38个</span></div>
+          <div><span>总用时：</span><span class="stat-val">{{ scanTimer }}</span></div>
+          <div><span>发现异常：</span><span class="stat-val danger">{{ totalErrors }}个</span></div>
+          <button class="btn-restart" @click="startScan">{{ isScanning ? '监测中...' : '再次监测' }}</button>
         </div>
       </div>
 
-      <div class="stats-row">
-        <div class="stat-item">
-          <span>监测对象：</span>
-          <span class="stat-val">38个</span>
-        </div>
-        <div class="stat-item">
-          <span>总用时：</span>
-          <span class="stat-val">{{ scanTimer }}</span>
-        </div>
-        <div class="stat-item">
-          <span>发现异常：</span>
-          <span class="stat-val danger">{{ totalErrors }}个</span>
-        </div>
-        <button class="btn-restart" @click="startScan">
-          {{ isScanning ? '监测中...' : '再次监测' }}
-        </button>
-      </div>
-    </div>
-
-    <div class="main-content">
-
-      <div class="left-panel">
-        <div class="panel-title">检测项目清单</div>
-        <div class="accordion-container">
-
-          <div class="acc-item" v-for="cate in categories" :key="cate.id">
-            <div class="acc-header" @click="toggleCategory(cate)">
-              <span class="acc-title">{{ cate.title }}</span>
-              <div style="display: flex; align-items: center;">
-                <span v-if="cate.errorCount > 0" class="acc-count">异常: {{ cate.errorCount }}个</span>
-                <span class="acc-arrow" :class="{ open: cate.isOpen }">▼</span>
+      <div class="main-content">
+        <div class="left-panel">
+          <div class="panel-title">检测项目清单</div>
+          <div class="accordion-container">
+            <div class="acc-item" v-for="cate in categories" :key="cate.id">
+              <div class="acc-header" @click="toggleCategory(cate)">
+                <span class="acc-title">{{ cate.title }}</span>
+                <div style="display: flex; align-items: center;">
+                  <span v-if="cate.errorCount > 0"
+                    style="color: var(--accent-red); margin-right: 10px; font-weight: bold;">异常: {{ cate.errorCount
+                    }}个</span>
+                  <span style="color: var(--text-secondary); font-size: 12px;">{{ cate.isOpen ? '▲' : '▼' }}</span>
+                </div>
               </div>
-            </div>
-
-            <div class="acc-body" :class="{ open: cate.isOpen }">
-              <div v-for="item in cate.items" :key="item.id" class="error-item"
-                :class="{ active: currentSelectedId === item.id }" @click="selectIssue(item)">
-                {{ item.desc }}
+              <div class="acc-body" :class="{ open: cate.isOpen }">
+                <div v-for="item in cate.items" :key="item.id" class="error-item"
+                  :class="{ active: currentSelectedId === item.id }" @click="selectIssue(item)">
+                  <span style="color:var(--accent-red); margin-right:8px;">●</span>{{ item.desc }}
+                </div>
               </div>
             </div>
           </div>
-
         </div>
-      </div>
 
-      <div class="right-panel">
-        <div class="panel-title">AI 结果分析</div>
-
-        <div class="chat-container" id="chatBox">
-          <div v-for="(msg, index) in messages" :key="index" class="chat-msg" :class="msg.role">
-            <div class="avatar">{{ msg.role === 'ai' ? '🤖' : '👤' }}</div>
-            <div class="msg-content">
-              <div v-html="msg.text"></div>
-
-              <div v-if="msg.role === 'ai' && msg.hasAction" class="action-area">
-                <button class="btn-action" :class="{ synced: msg.isSynced }" @click="syncToTask(msg)">
-                  {{ msg.isSynced ? '✔ 已完成同步' : '⚡ 同步至任务列表' }}
-                </button>
+        <div class="right-panel">
+          <div class="panel-title">AI 结果分析</div>
+          <div class="chat-container" id="chatBox">
+            <div v-for="(msg, index) in messages" :key="index" class="chat-msg" :class="msg.role">
+              <i class="iconfont">&#xe87d;</i>
+              <div class="msg-content">
+                <div v-html="msg.text"></div>
+                <div v-if="msg.role === 'ai' && msg.hasAction">
+                  <button class="btn-action" :class="{ synced: msg.isSynced }" @click="syncToTask(msg)">
+                    {{ msg.isSynced ? '✔ 已完成同步' : '⚡ 同步至任务列表' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="input-area">
-          <input type="text" class="chat-input" v-model="userInput" @keyup.enter="sendMessage"
-            placeholder="针对当前问题询问 AI...">
-          <button class="btn-send" @click="sendMessage">➤</button>
+          <div class="input-area">
+            <input type="text" class="chat-input" v-model="userInput" @keyup.enter="sendMessage"
+              placeholder="针对当前问题询问 AI...">
+            <button class="btn-send" @click="sendMessage">➤</button>
+          </div>
         </div>
       </div>
-
-    </div>
-
+    </main>
   </div>
 
   <script>
@@ -539,7 +689,6 @@
 
     createApp({
       setup() {
-        // --- 状态数据 ---
         const isScanning = ref(false);
         const scanProgress = ref(0);
         const healthScore = ref(0);
@@ -547,161 +696,143 @@
         const userInput = ref("");
         const currentSelectedId = ref(null);
 
-        // 模拟监测数据结构
         const categories = reactive([
           {
             id: 1, title: "系统连接和健康状态", isOpen: true, errorCount: 2,
             items: [
-              {
-                id: 101, desc: "1. 目前换热站实时温度105℃异常", type: "urgent",
-                aiAnalysis: "目前换热站内温度显示过高，检测到是5分钟前突发性的，考虑站内环境温度表计异常。建议立即派人核查表计或检查是否有火灾隐患。"
-              },
-              {
-                id: 102, desc: "2. 目前低区换热器换热效率为10%异常", type: "warning",
-                aiAnalysis: "板换效率极低，且一二次侧温差过大。初步判断为板片严重结垢或反接。建议列入检修计划进行反冲洗。"
-              }
+              { id: 101, desc: "1. 目前换热站实时温度105℃异常", aiAnalysis: "目前换热站内温度显示过高，检测到是5分钟前突发性的，考虑站内环境温度表计异常。建议立即派人核查表计或检查是否有火灾隐患。" },
+              { id: 102, desc: "2. 目前低区换热器换热效率为10%异常", aiAnalysis: "板换效率极低，且一二次侧温差过大。初步判断为板片严重结垢或反接。建议列入检修计划进行反冲洗。" }
             ]
           },
           {
             id: 2, title: "异常数据校验", isOpen: false, errorCount: 1,
-            items: [
-              {
-                id: 201, desc: "1. 一次侧阀门开度0%但有大流量", type: "logic",
-                aiAnalysis: "物理逻辑冲突：阀门反馈关闭但流量计读数很大。可能是阀门反馈信号故障或流量计漂移。建议优先检查阀门限位开关。"
-              }
-            ]
+            items: [{ id: 201, desc: "1. 一次侧阀门开度0%但有大流量", aiAnalysis: "物理逻辑冲突：阀门反馈关闭但流量计读数很大。可能是阀门反馈信号故障或流量计漂移。建议优先检查阀门限位开关。" }]
           },
           {
             id: 3, title: "经济运行情况", isOpen: false, errorCount: 1,
-            items: [
-              {
-                id: 301, desc: "1. 夜间补水量异常偏高", type: "cost",
-                aiAnalysis: "夜间补水量达到 5t/h，远超正常值。结合压力曲线分析，疑似二网末端存在泄漏或用户放水。建议排查高区管网。"
-              }
-            ]
+            items: [{ id: 301, desc: "1. 夜间补水量异常偏高", aiAnalysis: "夜间补水量达到 5t/h，远超正常值。结合压力曲线分析，疑似二网末端存在泄漏或用户放水。建议排查高区管网。" }]
           }
         ]);
 
-        // 计算总异常数
-        const totalErrors = computed(() => {
-          return categories.reduce((sum, cate) => sum + cate.errorCount, 0);
-        });
+        const totalErrors = computed(() => categories.reduce((sum, c) => sum + c.errorCount, 0));
+        const messages = reactive([{ role: 'ai', text: '体检已完成。左侧列出了检测到的异常项目，请点击查看详细分析。', hasAction: false }]);
 
-        // 聊天记录
-        const messages = reactive([
-          { role: 'ai', text: '体检已完成。左侧列出了检测到的异常项目，请点击查看详细分析。', hasAction: false }
-        ]);
+        // 核心：复刻原文件的缩放逻辑
+        const handleResize = () => {
+          const designWidth = 1920;
+          const designHeight = 1080;
+          const clientWidth = document.documentElement.clientWidth;
+          const clientHeight = document.documentElement.clientHeight;
+          const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
 
-        // --- 方法逻辑 ---
+          const app = document.getElementById('app');
+          if (app) {
+            app.style.transform = `scale(${scale})`;
+            const left = (clientWidth - designWidth * scale) / 2;
+            const top = (clientHeight - designHeight * scale) / 2;
+            app.style.left = `${left}px`;
+            app.style.top = `${top}px`;
+          }
+        };
 
-        // 1. 模拟扫描过程
         const startScan = () => {
-          isScanning.value = true;
-          scanProgress.value = 0;
-          healthScore.value = 0;
-          scanTimer.value = "00:00:00";
-          messages.length = 0; // 清空聊天
-
+          isScanning.value = true; scanProgress.value = 0; healthScore.value = 0; messages.length = 0;
           let p = 0;
           const interval = setInterval(() => {
-            p += 2;
-            scanProgress.value = p;
-
-            // 模拟时间跳动
-            const sec = Math.floor(p / 100 * 600); // 假设一共耗时10分钟
-            const m = Math.floor(sec / 60).toString().padStart(2, '0');
-            const s = (sec % 60).toString().padStart(2, '0');
-            scanTimer.value = `00:${m}:${s}`;
-
+            p += 2; scanProgress.value = p;
+            const sec = Math.floor(p / 100 * 600);
+            scanTimer.value = `00:${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`;
             if (p >= 100) {
-              clearInterval(interval);
-              isScanning.value = false;
-              healthScore.value = 85; // 模拟最终得分
+              clearInterval(interval); isScanning.value = false; healthScore.value = 85;
               messages.push({ role: 'ai', text: '监测完成！发现 ' + totalErrors.value + ' 个异常项，请点击左侧列表查看。', hasAction: false });
             }
           }, 30);
         };
 
-        // 2. 折叠/展开
-        const toggleCategory = (cate) => {
-          cate.isOpen = !cate.isOpen;
-        };
-
-        // 3. 选中异常项 -> AI 分析
+        const toggleCategory = (cate) => cate.isOpen = !cate.isOpen;
         const selectIssue = (item) => {
           currentSelectedId.value = item.id;
-          // 添加用户点击动作（可选）
-          // messages.push({ role: 'user', text: '分析项目：' + item.desc });
-
-          // 模拟 AI 思考延迟
           setTimeout(() => {
-            messages.push({
-              role: 'ai',
-              text: `<strong>针对 "${item.desc}" 的分析：</strong><br/>${item.aiAnalysis}`,
-              hasAction: true,
-              isSynced: false,
-              relatedId: item.id
-            });
-            scrollToBottom();
+            messages.push({ role: 'ai', text: `<strong>针对 "${item.desc}" 的分析：</strong><br/>${item.aiAnalysis}`, hasAction: true, isSynced: false, relatedId: item.id });
+            nextTick(() => document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight);
           }, 300);
         };
-
-        // 4. 同步至任务列表
-        const syncToTask = (msg) => {
-          if (msg.isSynced) return;
-          msg.isSynced = true;
-          // 这里可以添加实际的 API 调用逻辑
-          console.log(`异常项 ID ${msg.relatedId} 已同步至任务列表`);
-        };
-
-        // 5. 发送消息
+        const syncToTask = (msg) => { if (!msg.isSynced) msg.isSynced = true; };
         const sendMessage = () => {
           if (!userInput.value.trim()) return;
           messages.push({ role: 'user', text: userInput.value });
-
-          // 模拟 AI 回复
           setTimeout(() => {
-            messages.push({
-              role: 'ai',
-              text: '收到您的反馈。已为您检索相关知识库，建议您携带万用表前往现场，检查表计的 4-20mA 信号输出是否正常。',
-              hasAction: false
-            });
-            scrollToBottom();
+            messages.push({ role: 'ai', text: '收到反馈。已检索相关知识库，建议检查信号输出是否正常。', hasAction: false });
+            nextTick(() => document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight);
           }, 1000);
-
           userInput.value = "";
         };
 
-        const scrollToBottom = () => {
-          nextTick(() => {
-            const el = document.getElementById('chatBox');
-            if (el) el.scrollTop = el.scrollHeight;
-          });
-        };
+        onMounted(() => {
+          setTimeout(startScan, 500);
+        });
 
-        // 页面缩放适配
-        const handleResize = () => {
-          const designWidth = 1920;
-          const designHeight = 1080;
-          const scale = Math.min(window.innerWidth / designWidth, window.innerHeight / designHeight);
-          const app = document.getElementById('app');
-          if (app) app.style.transform = `scale(${scale})`;
+        // 导航切换函数
+        const switchNav = (el) => {
+          const items = document.querySelectorAll('.nav-item');
+          items.forEach(item => item.classList.remove('active'));
+          el.classList.add('active');
+          console.log("已切换至: " + el.querySelector('.nav-label').innerText);
         };
 
         onMounted(() => {
           handleResize();
           window.addEventListener('resize', handleResize);
-          // 自动开始一次扫描
-          setTimeout(startScan, 500);
         });
 
         return {
-          isScanning, scanProgress, healthScore, scanTimer, totalErrors,
-          categories, messages, userInput, currentSelectedId,
+          isScanning, scanProgress, healthScore, scanTimer, totalErrors, categories, messages, userInput, currentSelectedId,
           startScan, toggleCategory, selectIssue, syncToTask, sendMessage
         };
       }
     }).mount('#app');
+
+    // 全局缩放适配函数
+    function handleResize() {
+      const designWidth = 1920;
+      const designHeight = 1080;
+      const clientWidth = document.documentElement.clientWidth;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+      const app = document.getElementById('app');
+      if (app) {
+        app.style.transform = `scale(${scale})`;
+        const left = (clientWidth - designWidth * scale) / 2;
+        const top = (clientHeight - designHeight * scale) / 2;
+        app.style.left = `${left}px`;
+        app.style.top = `${top}px`;
+      }
+    }
+
+    // 页面跳转前重置缩放状态
+    window.addEventListener('beforeunload', () => {
+      document.body.style.opacity = '0';
+    });
+
+    // 页面加载完成后立即应用缩放
+    document.addEventListener('DOMContentLoaded', () => {
+      handleResize();
+      // 页面加载完成后淡入
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+      }, 50);
+    });
+
+    // 全局初始化入口 (与其他页面保持一致)
+    function initApp() {
+      handleResize();
+    }
+
+    // 唯一启动监听
+    window.addEventListener('load', initApp);
+    window.addEventListener('resize', handleResize);
   </script>
 </body>
 

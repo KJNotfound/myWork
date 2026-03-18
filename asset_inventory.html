@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>资产盘点 - 智慧换热站</title>
+  <script src="libs/vue.global.js"></script>
+  <!-- 延迟加载重型库 -->
+  <script>
+    // 异步加载图表库
+    function loadCharts() {
+      const scripts = [
+        'libs/echarts.min.js'
+      ];
+
+      scripts.forEach(src => {
+        const script = document.createElement('script');
+        script.src = src;
+        document.head.appendChild(script);
+      });
+    }
+
+    // 页面加载完成后延迟加载图表
+    window.addEventListener('load', () => {
+      setTimeout(loadCharts, 200);
+    });
+  </script>
+  <link rel="stylesheet" href="fonts/iconfont.css">
+  <!-- 主题配置 -->
+  <script src="theme-config.js"></script>
+
+
+  <style>
+    /* 在线链接服务仅供平台体验和调试使用，平台不承诺服务的稳定性，企业客户需下载字体包自行发布使用并做好备份。 */
+
+    /* --- 1. 全局样式 (复用系统风格) --- */
+    :root {
+      --bg-color: #0f1a2b;
+      --panel-bg: rgba(16, 42, 67, 0.85);
+      --border-color: rgba(79, 172, 254, 0.3);
+      --text-primary: #ffffff;
+      --text-secondary: #b8cbe3;
+      --accent-blue: #4facfe;
+      --accent-cyan: #00f2fe;
+      --accent-red: #ff3300;
+      --accent-green: #00e676;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a2332 0%, #1f2937 50%, #1a2332 100%) !important;
+      color: var(--text-primary) !important;
+      font-family: "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      transition: opacity 0.2s ease-in-out;
+      position: relative;
+    }
+
+    /* 电子扫描线背景 */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(79, 172, 254, 0.015) 2px,
+          transparent 4px),
+        repeating-linear-gradient(90deg,
+          transparent,
+          transparent 2px,
+          rgba(79, 172, 254, 0.015) 2px,
+          transparent 4px);
+      pointer-events: none;
+      z-index: 1;
+      animation: scanLines 20s linear infinite;
+    }
+
+    @keyframes scanLines {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      100% {
+        transform: translate(4px, 4px);
+      }
+    }
+
+    .dashboard-root {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: left top;
+      display: flex;
+      background-color: #1a2332
+    }
+
+    /* --- 2. 侧边导航栏 --- */
+    .side-nav {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 110px;
+      height: 100%;
+      background: #081221;
+      border-right: 1px solid var(--accent-blue);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding-top: 60px;
+      transform: none !important;
+    }
+
+    .nav-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 15px 0;
+      position: relative;
+      transition: all 0.3s ease;
+      color: oklch(1 0 0 / 0.6);
+    }
+
+    .nav-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      writing-mode: horizontal-tb !important;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      letter-spacing: 1px;
+      opacity: 1 !important;
+      display: block;
+    }
+
+    /* 导航交互状态 */
+    .nav-item:hover,
+    .nav-item.active {
+      background: oklch(0.6 0.15 200 / 0.15);
+      color: #4facfe;
+    }
+
+    .nav-item.active .nav-label {
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.1);
+    }
+
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #4facfe;
+      box-shadow: 0 0 10px #4facfe;
+    }
+
+    /* --- 3. 主内容区域 --- */
+    .main-container {
+      flex: 1;
+      margin-left: 110px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 15px;
+    }
+
+    /* 其他样式 */
+
+    .nav-icon {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      font-size: 14px;
+    }
+
+    /* 主内容区 */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* 顶部栏 */
+    .top-bar {
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(13, 27, 49, 0.5);
+      border-bottom: 1px solid var(--accent-blue);
+      padding: 0 30px;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    /* --- 2. 盘点主界面布局 --- */
+    .inventory-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* 通用面板 */
+    .panel {
+      background: rgba(26, 35, 50, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+      filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.3)) drop-shadow(0 0 15px rgba(79, 172, 254, 0.2));
+    }
+
+    .panel-header {
+      height: 50px;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--accent-blue);
+    }
+
+    /* 左侧：资产列表 */
+    .asset-table-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .asset-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .asset-table th {
+      position: sticky;
+      top: 0;
+      background: #0c1626;
+      z-index: 10;
+      padding: 15px;
+      text-align: left;
+      color: var(--text-secondary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .asset-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #fff;
+      transition: all 0.3s;
+    }
+
+    /* 状态样式 */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      background: rgba(255, 255, 255, 0.1);
+      color: #aaa;
+    }
+
+    .status-ok {
+      background: rgba(0, 230, 118, 0.2);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .status-manual {
+      background: rgba(255, 206, 85, 0.2);
+      color: #ffce55;
+      border: 1px solid #ffce55;
+    }
+
+    /* 扫描高亮动画 */
+    .row-scanned {
+      background: rgba(0, 230, 118, 0.15) !important;
+      animation: flashGreen 1s ease-out;
+    }
+
+    .row-selected {
+      background: rgba(79, 172, 254, 0.2) !important;
+    }
+
+    @keyframes flashGreen {
+      0% {
+        background: rgba(0, 230, 118, 0.6);
+      }
+
+      100% {
+        background: rgba(0, 230, 118, 0.15);
+      }
+    }
+
+    /* 右侧：操作区 */
+    .dashboard-panel {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: 100%;
+    }
+
+    /* 进度仪表盘 */
+    .chart-box {
+      height: 200px;
+      position: relative;
+      filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.3)) drop-shadow(0 0 15px rgba(79, 172, 254, 0.2));
+    }
+
+    /* 科技感边框装饰 */
+    .tech-border {
+      position: absolute;
+      width: 25px;
+      height: 25px;
+      border: 1px solid rgba(0, 242, 255, 0.4);
+      pointer-events: none;
+    }
+
+    .tech-border::before {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #00f2ff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00f2ff;
+      top: -2px;
+      left: -2px;
+    }
+
+    .tech-border.top-left {
+      top: 15px;
+      left: 15px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .tech-border.top-right {
+      top: 15px;
+      right: 15px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .tech-border.bottom-left {
+      bottom: 15px;
+      left: 15px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .tech-border.bottom-right {
+      bottom: 15px;
+      right: 15px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    /* 数字跳动动画 */
+    .tech-number {
+      animation: numberPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes numberPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+      }
+    }
+
+    /* 流动效果 */
+    .flow-animation {
+      stroke-dasharray: 8 4;
+      animation: flowAnimation 1.5s linear infinite;
+    }
+
+    @keyframes flowAnimation {
+      0% {
+        stroke-dashoffset: 0;
+      }
+
+      100% {
+        stroke-dashoffset: -12;
+      }
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .progress-percent {
+      font-size: 36px;
+      font-weight: bold;
+      color: var(--accent-cyan);
+    }
+
+    /* 统计数据 */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .stat-item {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* RFID 雷达扫描动画 */
+    .radar-box {
+      flex: 1;
+      background: rgba(26, 35, 50, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radar-scan {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 242, 254, 0.3);
+      position: relative;
+    }
+
+    .radar-scan::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 242, 254, 0.5) 60deg, transparent 60deg);
+      animation: scanRotate 2s linear infinite;
+    }
+
+    .radar-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: dotFade 1s forwards;
+    }
+
+    /* 按钮组 */
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      margin-top: auto;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-manual {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--text-secondary);
+      color: #fff;
+    }
+
+    .btn-submit {
+      background: linear-gradient(90deg, #00f2fe, #4facfe);
+      color: #000;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.2);
+    }
+
+    /* --- 3. 身份验证模态框 --- */
+    .auth-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      background: rgba(5, 10, 16, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .camera-circle {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 4px solid var(--accent-blue);
+      position: relative;
+      overflow: hidden;
+      background: rgba(26, 35, 50, 0.9);
+      box-shadow: 0 0 30px rgba(79, 172, 254, 0.5);
+    }
+
+    .scan-laser {
+      width: 100%;
+      height: 4px;
+      background: var(--accent-cyan);
+      position: absolute;
+      top: 0;
+      box-shadow: 0 0 20px var(--accent-cyan);
+      animation: laserDown 3s infinite;
+      will-change: transform;
+    }
+
+    @keyframes scanRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes laserDown {
+      0% {
+        top: 0;
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+
+      100% {
+        top: 100%;
+        opacity: 0;
+      }
+    }
+
+    @keyframes dotFade {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(2);
+      }
+    }
+  
+    /* 白天模式样式 */
+    .light-mode {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    .light-mode::before {
+      display: none;
+    }
+
+    .light-mode .dashboard-root {
+      background-color: #f8fafc;
+    }
+
+    .light-mode .side-nav {
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .light-mode .nav-item {
+      color: #64748b;
+    }
+
+    .light-mode .nav-item:hover,
+    .light-mode .nav-item.active {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .light-mode .nav-item.active::before {
+      background: #2563eb;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    }
+
+    .light-mode .nav-item.active::after {
+      background: #2563eb;
+      box-shadow: 0 0 10px #2563eb;
+    }
+
+    .light-mode .top-bar {
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+    }
+
+    .light-mode .page-title {
+      color: #1e40af;
+      text-shadow: none;
+    }
+
+    .light-mode .panel {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(37, 99, 235, 0.3);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      filter: none;
+    }
+
+    .light-mode .panel-header {
+      background: rgba(37, 99, 235, 0.05);
+      border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+      color: #1e40af;
+    }
+
+    .light-mode .tech-number {
+      color: #64748b !important;
+    }
+
+    .light-mode .asset-table th {
+      background: #f1f5f9;
+      color: #475569;
+      border-bottom: 2px solid #cbd5e1;
+    }
+
+    .light-mode .asset-table td {
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+
+    .light-mode .status-pending {
+      background: rgba(148, 163, 184, 0.1);
+      color: #64748b;
+    }
+
+    .light-mode .row-selected {
+      background: rgba(37, 99, 235, 0.1) !important;
+    }
+
+    .light-mode .tech-border {
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .light-mode .tech-border::before {
+      background: #2563eb;
+      box-shadow: 0 0 5px #2563eb;
+    }
+
+    .light-mode .radar-box {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .light-mode .radar-scan {
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .light-mode .radar-scan::after {
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(37, 99, 235, 0.3) 60deg, transparent 60deg);
+    }
+
+    .light-mode .stat-item {
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px solid #e2e8f0;
+    }
+
+    .light-mode .stat-num[style*="color: #fff"] {
+      color: #1e293b !important;
+    }
+
+    .light-mode .btn-manual {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #1e293b;
+    }
+
+    .light-mode .btn-manual:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="dashboard-root">
+    <aside class="side-nav">
+      <div class="nav-wrapper">
+        <div class="nav-item" onclick="window.location.href='home.html'">
+          <i class="iconfont nav-icon">&#xe603;</i>
+          <div class="nav-label">首页</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='smart_heating_station_terminal.html'">
+          <i class="iconfont nav-icon">&#xe84a;</i>
+          <div class="nav-label">我的换热站</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='station_patrol.html'">
+          <i class="iconfont nav-icon">&#xe65c;</i>
+          <div class="nav-label">一键巡站</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='station_startup.html'">
+          <i class="iconfont nav-icon">&#xe6db;</i>
+          <div class="nav-label">一键启停</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='health_monitor.html'">
+          <i class="iconfont nav-icon">&#xe61f;</i>
+          <div class="nav-label">健康监测</div>
+        </div>
+        <div class="nav-item active" onclick="window.location.href='asset_inventory.html'">
+          <i class="iconfont nav-icon">&#xe668;</i>
+          <div class="nav-label">资产盘点</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='system_settings.html'">
+          <i class="iconfont nav-icon">&#xe602;</i>
+          <div class="nav-label">系统设置</div>
+        </div>
+      </div>
+    </aside>
+
+    <div v-if="!isAuth" class="auth-modal">
+      <div class="camera-circle">
+        <img
+          src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMwYzE2MjYiLz48Y2lyY2xlIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjMwJSIgZmlsbD0iIzFhMmEzYSIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+"
+          style="width:100%; height:100%; object-fit: cover;">
+        <div class="scan-laser"></div>
+      </div>
+      <h2 style="color: #fff; margin-top: 30px; letter-spacing: 2px;">请正对屏幕进行身份核验</h2>
+      <p style="color: var(--accent-blue); margin-top: 10px;">正在识别操作权限...</p>
+    </div>
+
+    <main v-else class="main-container">
+      <header class="top-bar">
+        <div class="page-title">固定资产智能盘点</div>
+        <div style="color: #fff;">
+          操作员：<span style="color: var(--accent-cyan); font-weight: bold;">{{ currentUser }}</span>
+          | 时间：{{ currentTime }}
+        </div>
+      </header>
+
+      <div class="inventory-grid">
+
+        <div class="panel">
+          <div class="panel-header">
+            <span>设备清单明细</span>
+            <span class="tech-number" style="font-size: 14px; color: var(--text-secondary);">共 {{ assets.length }}
+              项</span>
+          </div>
+          <!-- 科技感边框装饰 -->
+          <div class="tech-border top-left"></div>
+          <div class="tech-border top-right"></div>
+          <div class="tech-border bottom-left"></div>
+          <div class="tech-border bottom-right"></div>
+          <div class="asset-table-container" id="tableContainer">
+            <table class="asset-table">
+              <thead>
+                <tr>
+                  <th width="60">序号</th>
+                  <th>设备名称</th>
+                  <th>规格型号</th>
+                  <th>资产编号 (RFID)</th>
+                  <th width="100">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in assets" :key="item.id"
+                  :class="{ 'row-scanned': item.justScanned, 'row-selected': selectedId === item.id }"
+                  @click="selectedId = item.id">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.model }}</td>
+                  <td style="font-family: monospace; color: var(--accent-blue);">{{ item.rfid }}</td>
+                  <td>
+                    <span class="status-badge" :class="getStatusClass(item.status)">
+                      {{ item.statusText }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">盘点实时状态</div>
+          <!-- 科技感边框装饰 -->
+          <div class="tech-border top-left"></div>
+          <div class="tech-border top-right"></div>
+          <div class="tech-border bottom-left"></div>
+          <div class="tech-border bottom-right"></div>
+          <div class="dashboard-panel">
+
+            <div class="chart-box" ref="chartRef">
+              <div class="progress-text">
+                <div class="progress-percent tech-number">{{ percent }}%</div>
+                <div style="font-size: 12px; color: #888;">完成率</div>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <div class="stat-item">
+                <div class="stat-num" style="color: #fff;">{{ assets.length }}</div>
+                <div class="stat-desc">应盘总数</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-num" style="color: var(--accent-green);">{{ scannedCount }}</div>
+                <div class="stat-desc">实盘数量</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-num" style="color: var(--accent-red);">{{ assets.length - scannedCount }}</div>
+                <div class="stat-desc">差异数量</div>
+              </div>
+            </div>
+
+            <div class="radar-box">
+              <div v-if="isScanning" class="radar-scan">
+                <div v-for="dot in radarDots" :key="dot.id" class="radar-dot"
+                  :style="{ top: dot.y + 'px', left: dot.x + 'px' }"></div>
+              </div>
+              <div style="margin-top: 15px; color: var(--accent-cyan); font-size: 14px;">
+                <i class="iconfont" style="vertical-align: middle;">&#xe630;</i>
+                {{ isScanning ? 'RFID 信号搜索中...' : '扫描已暂停' }}
+              </div>
+              <div style="height: 20px; font-size: 12px; color: #fff; margin-top: 5px;">
+                {{ lastLog }}
+              </div>
+            </div>
+
+            <div class="btn-group">
+              <button class="btn btn-manual" @click="manualCheck">手动录入</button>
+              <button class="btn btn-submit" @click="finishInventory">结束并上传</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const isAuth = ref(false);
+        const currentUser = ref("张三 (管家)");
+        const currentTime = ref("");
+        const selectedId = ref(null);
+        const isScanning = ref(true);
+        const lastLog = ref("");
+        const chartRef = ref(null);
+        let myChart = null;
+
+        // 模拟雷达点
+        const radarDots = reactive([]);
+
+        // 资产数据
+        const assets = reactive([
+          { id: 1, name: "1# 循环泵", model: "Grundfos TPE", rfid: "RF-E001-2893", status: 0, statusText: "待盘点" },
+          { id: 2, name: "2# 循环泵", model: "Grundfos TPE", rfid: "RF-E001-2894", status: 0, statusText: "待盘点" },
+          { id: 3, name: "1# 板式换热器", model: "Alfa Laval M15", rfid: "RF-H002-9981", status: 0, statusText: "待盘点" },
+          { id: 4, name: "2# 板式换热器", model: "Alfa Laval M15", rfid: "RF-H002-9982", status: 0, statusText: "待盘点" },
+          { id: 5, name: "补水泵 A", model: "Wilo MHI", rfid: "RF-P003-1120", status: 0, statusText: "待盘点" },
+          { id: 6, name: "补水泵 B", model: "Wilo MHI", rfid: "RF-P003-1121", status: 0, statusText: "待盘点" },
+          { id: 7, name: "变频控制柜", model: "ABB ACS510", rfid: "RF-C004-5566", status: 0, statusText: "待盘点" },
+          { id: 8, name: "PLC控制柜", model: "Siemens S7-1200", rfid: "RF-C004-5567", status: 0, statusText: "待盘点" },
+          { id: 9, name: "除污器", model: "DN200", rfid: "RF-V005-3344", status: 0, statusText: "待盘点" },
+          { id: 10, name: "电动调节阀", model: "Danfoss", rfid: "RF-V005-3345", status: 0, statusText: "待盘点" }
+        ]);
+
+        const scannedCount = computed(() => assets.filter(a => a.status !== 0).length);
+        const percent = computed(() => Math.round((scannedCount.value / assets.length) * 100));
+
+        const getStatusClass = (s) => {
+          if (s === 1) return 'status-ok';
+          if (s === 2) return 'status-manual';
+          return 'status-pending';
+        };
+
+        // 1. 模拟身份验证
+        const startAuth = () => {
+          setTimeout(() => {
+            isAuth.value = true; // 验证通过
+            startClock();
+            initChart();
+            startRFIDSimulation();
+          }, 3000); // 3秒后进入主页
+        };
+
+        // 2. 模拟 RFID 自动扫描
+        const startRFIDSimulation = () => {
+          setInterval(() => {
+            if (!isScanning.value || scannedCount.value === assets.length) return;
+
+            // 30% 概率扫到一个新设备
+            if (Math.random() > 0.7) {
+              const pendingItems = assets.filter(a => a.status === 0);
+              if (pendingItems.length > 0) {
+                const item = pendingItems[Math.floor(Math.random() * pendingItems.length)];
+                scanItem(item);
+              }
+            }
+          }, 1500);
+        };
+
+        const scanItem = (item) => {
+          // 标记状态
+          item.status = 1;
+          item.statusText = "RFID已读";
+          item.justScanned = true; // 触发高亮动画
+          lastLog.value = `识别到信号: ${item.rfid} (${item.name})`;
+
+          // 雷达上添加一个点
+          addRadarDot();
+
+          // 滚动到该行
+          nextTick(() => {
+            // 简单处理：实际项目中可用 id 锚点
+            setTimeout(() => { item.justScanned = false; }, 2000);
+          });
+
+          updateChart();
+        };
+
+        const addRadarDot = () => {
+          const id = Date.now();
+          // 随机位置 (在200x200圆内)
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * 80; // 半径
+          const x = 100 + Math.cos(angle) * r;
+          const y = 100 + Math.sin(angle) * r;
+
+          radarDots.push({ id, x, y });
+          setTimeout(() => {
+            const idx = radarDots.findIndex(d => d.id === id);
+            if (idx > -1) radarDots.splice(idx, 1);
+          }, 1000);
+        };
+
+        // 3. 手动录入
+        const manualCheck = () => {
+          if (!selectedId.value) return alert("请先在左侧列表中选择一项设备");
+          const item = assets.find(a => a.id === selectedId.value);
+          if (item.status !== 0) return alert("该设备已盘点");
+
+          const note = prompt(`确认手动盘点：${item.name}？\n请输入备注（如：标签损坏）：`, "标签脱落，实物在位");
+          if (note) {
+            item.status = 2;
+            item.statusText = "人工确认";
+            lastLog.value = `人工操作: ${item.name} 已确认`;
+            updateChart();
+          }
+        };
+
+        // 4. 结束盘点
+        const finishInventory = () => {
+          const missing = assets.length - scannedCount.value;
+          if (missing > 0) {
+            if (!confirm(`还有 ${missing} 项设备未盘点，确定要上传结果吗？`)) return;
+          }
+          alert("盘点数据打包完成！\n包含：人员信息、时间戳、设备状态清单。\n已成功发送至后台管理系统。");
+          window.location.href = 'smart_heating_station_terminal.html';
+        };
+
+        // 图表初始化
+        const initChart = () => {
+          nextTick(() => {
+            if (!chartRef.value) return;
+            myChart = echarts.init(chartRef.value);
+            updateChart();
+          });
+        };
+
+        const updateChart = () => {
+          if (!myChart) return;
+          myChart.setOption({
+            series: [{
+              type: 'pie',
+              radius: ['70%', '85%'],
+              label: { show: false },
+              data: [
+                { value: scannedCount.value, itemStyle: { color: '#00f2fe' } },
+                { value: assets.length - scannedCount.value, itemStyle: { color: 'rgba(255,255,255,0.1)' } }
+              ]
+            }]
+          });
+        };
+
+        const startClock = () => {
+          setInterval(() => {
+            const now = new Date();
+            currentTime.value = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+          }, 1000);
+        };
+
+        onMounted(() => {
+          startAuth(); // 页面加载即开始验证
+
+          // 等待图表库加载完成后再初始化图表
+          const initCharts = () => {
+            if (typeof echarts !== 'undefined' && chartRef.value) {
+              // 图表库已加载，可以初始化图表
+              console.log("图表库已加载，可以初始化图表");
+            } else {
+              setTimeout(initCharts, 100);
+            }
+          };
+
+          setTimeout(initCharts, 500);
+        });
+
+        return {
+          isAuth, assets, selectedId, percent, scannedCount,
+          currentUser, currentTime, isScanning, lastLog, radarDots,
+          chartRef, getStatusClass, manualCheck, finishInventory
+        };
+      }
+    }).mount('#app');
+
+    // 导航切换函数 (与其他页面保持一致)
+    function switchNav(el) {
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(item => item.classList.remove('active'));
+      el.classList.add('active');
+      console.log("已切换至: " + el.querySelector('.nav-label').innerText);
+    }
+
+    // 全局缩放适配函数 (与其他页面保持一致)
+    function handleResize() {
+      const designWidth = 1920;
+      const designHeight = 1080;
+      const clientWidth = document.documentElement.clientWidth;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+      const app = document.getElementById('app');
+      if (app) {
+        app.style.transform = `scale(${scale})`;
+        const left = (clientWidth - designWidth * scale) / 2;
+        const top = (clientHeight - designHeight * scale) / 2;
+        app.style.left = `${left}px`;
+        app.style.top = `${top}px`;
+      }
+    }
+
+    // 页面跳转前重置缩放状态
+    window.addEventListener('beforeunload', () => {
+      document.body.style.opacity = '0';
+    });
+
+    // 页面加载完成后立即应用缩放
+    document.addEventListener('DOMContentLoaded', () => {
+      handleResize();
+      // 页面加载完成后淡入
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+      }, 50);
+    });
+
+    // 全局初始化入口
+    function initApp() {
+      handleResize();
+    }
+
+    // 唯一启动监听
+    window.addEventListener('load', initApp);
+    window.addEventListener('resize', handleResize);
+  </script>
+</body>
+
+</html>

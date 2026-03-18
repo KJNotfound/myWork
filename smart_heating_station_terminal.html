@@ -2,39 +2,29 @@
 <html lang="zh-CN">
 
 <head>
-  <style>
-    /* 图标字体定义 */
-    @font-face {
-      font-family: 'iconfont';
-      src: url('fonts/font_5115287_4bas6dl1f8f.woff2') format('woff2'),
-        url('fonts/font_5115287_4bas6dl1f8f.woff') format('woff'),
-        url('fonts/font_5115287_4bas6dl1f8f.ttf') format('truetype');
-    }
-
-    .iconfont {
-      font-family: "iconfont" !important;
-      font-size: 28px;
-      font-style: normal;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      color: var(--accent-blue);
-    }
-  </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>智慧换热站</title>
-  <script src="js/echarts.min.js"></script>
-  <script src="js/gsap.min.js"></script>
-  <script src="js/MotionPathPlugin.min.js"></script>
+  <title>智慧换热站智能终端</title>
+  <script src="libs/vue.global.js"></script>
+  <script src="libs/echarts.min.js"></script>
+  <script src="libs/gsap.min.js"></script>
+  <script src="libs/MotionPathPlugin.min.js"></script>
+  <!-- 添加科技感字体 -->
+  <link rel="stylesheet" href="fonts/ShareTechMono.css">
+  <link rel="stylesheet" href="fonts/iconfont.css">
+  <!-- 主题配置 -->
+  <script src="theme-config.js"></script>
   <style>
     /* 全局样式定义 */
     :root {
       --bg-color: #0f1a2b;
-      --bg-panel: oklch(0.6 0.05 200 / 0.068) --bg-header: oklch(0.25 0.05 220 / 0.9);
+      --bg-panel: oklch(0.6 0.05 200 / 0.068);
+      --bg-header: oklch(0.25 0.05 220 / 0.9);
       --border-color: oklch(0.6 0.15 200 / 0.35);
       --text-primary: #ffffff;
       --text-secondary: #b8cbe3;
-      --accent-blue: #a1c4ff;
+      --accent-blue: #4facfe;
+      --pipe-color: rgba(0, 212, 255, 1);
     }
 
     * {
@@ -44,8 +34,45 @@
     }
 
     body {
-      background-color: var(--bg-color) !important;
+      background: linear-gradient(135deg, #0a1929 0%, #001e3c 50%, #0a1929 100%) !important;
       color: var(--text-primary) !important;
+      transition: opacity 0.2s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 电子扫描线背景 */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 242, 255, 0.03) 2px,
+          transparent 4px),
+        repeating-linear-gradient(90deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 242, 255, 0.03) 2px,
+          transparent 4px);
+      pointer-events: none;
+      z-index: 1;
+      animation: scanLines 20s linear infinite;
+    }
+
+    @keyframes scanLines {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      100% {
+        transform: translate(4px, 4px);
+      }
     }
 
     /* 布局结构 */
@@ -121,8 +148,9 @@
     /* 导航交互状态 */
     .nav-item:hover,
     .nav-item.active {
-      background: oklch(0.6 0.15 200 / 0.15);
+      background: linear-gradient(135deg, rgba(79, 172, 254, 0.3) 0%, rgba(0, 242, 254, 0.2) 100%);
       color: #4facfe;
+      border-left: 3px solid var(--accent-cyan);
     }
 
     .nav-item.active .nav-label {
@@ -148,11 +176,11 @@
     /* 主内容区域 */
     .main-container {
       flex: 1;
+      margin-left: 110px;
       display: flex;
       flex-direction: column;
-      margin-left: 110px;
-      padding: 5px;
-      gap: 5px;
+      padding: 20px;
+      gap: 15px;
     }
 
     /* 顶部栏 */
@@ -226,6 +254,10 @@
 
     .panel-header span {
       text-shadow: 0 0 10px oklch(0.6 0.15 200 / 0.5);
+    }
+
+    .panel-header .tech-number {
+      animation: numberPulse 2s ease-in-out infinite;
     }
 
     /* 数据表格 */
@@ -368,14 +400,1040 @@
     }
 
     /* 工艺图区域 */
-    .process-content {
+    /* 高科技工业组态背景 */
+    .process-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(79, 172, 254, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(0, 242, 255, 0.06) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 10, 30, 0.95) 100%);
+      pointer-events: none;
+    }
+
+    /* 微妙网格背景 */
+    .process-content::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(79, 172, 254, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79, 172, 254, 0.03) 1px, transparent 1px);
+      background-size: 30px 30px;
+      pointer-events: none;
+    }
+
+    #processContainer {
+      isolation: isolate;
+    }
+
+    #processContainer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(600px 420px at 50% 55%, rgba(0, 242, 255, 0.10), transparent 62%),
+        radial-gradient(520px 360px at 50% 55%, rgba(79, 172, 254, 0.10), transparent 64%),
+        linear-gradient(180deg, rgba(4, 10, 18, 0.35), rgba(0, 0, 0, 0.18));
+      opacity: 1;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #processContainer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 242, 255, 0.00) 0px, rgba(0, 242, 255, 0.00) 2px, rgba(0, 242, 255, 0.045) 3px, rgba(0, 242, 255, 0.00) 6px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.00), rgba(0, 242, 255, 0.055), rgba(0, 242, 255, 0.00));
+      mix-blend-mode: screen;
+      opacity: 0.35;
+      transform: translateX(-35%);
+      animation: procScanSweep 8.5s linear infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @keyframes procScanSweep {
+      0% {
+        transform: translateX(-45%);
+      }
+
+      100% {
+        transform: translateX(45%);
+      }
+    }
+
+    .process-layout {
+      position: absolute;
+      inset: 0;
+      display: block;
+      padding: 12px;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .flow-stage {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0, 242, 255, 0.18);
+      background:
+        radial-gradient(600px 520px at 50% 50%, rgba(0, 242, 255, 0.06), transparent 60%),
+        linear-gradient(180deg, rgba(11, 22, 36, 0.56), rgba(8, 18, 30, 0.32));
+      border-radius: 10px;
+      box-shadow:
+        inset 0 0 24px rgba(0, 242, 255, 0.07),
+        0 0 0 1px rgba(79, 172, 254, 0.07),
+        0 0 26px rgba(0, 242, 255, 0.06);
+      pointer-events: auto;
+      height: 100%;
+    }
+
+    .flow-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(0deg, rgba(0, 242, 255, 0.08), rgba(0, 242, 255, 0.00) 35%, rgba(0, 242, 255, 0.06)),
+        repeating-linear-gradient(90deg, rgba(79, 172, 254, 0.00) 0px, rgba(79, 172, 254, 0.00) 34px, rgba(79, 172, 254, 0.045) 35px, rgba(79, 172, 254, 0.00) 36px);
+      opacity: 0.45;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .flow-stage::after {
+      content: "";
+      position: absolute;
+      left: -15%;
+      right: -15%;
+      top: -20%;
+      bottom: -20%;
+      background: radial-gradient(closest-side, rgba(0, 242, 255, 0.18), transparent 70%);
+      opacity: 0.14;
+      filter: blur(10px);
+      animation: procBloom 6.5s ease-in-out infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes procBloom {
+
+      0%,
+      100% {
+        transform: translate3d(-1.5%, 0%, 0) scale(1);
+        opacity: 0.12;
+      }
+
+      50% {
+        transform: translate3d(1.5%, -1%, 0) scale(1.05);
+        opacity: 0.18;
+      }
+    }
+
+    .overlay-panel {
+      position: absolute;
+      top: 18px;
+      bottom: 18px;
+      width: 330px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 242, 255, 0.14);
+      background:
+        radial-gradient(280px 220px at 20% 20%, rgba(79, 172, 254, 0.14), transparent 60%),
+        linear-gradient(180deg, rgba(12, 26, 44, 0.62), rgba(10, 20, 34, 0.28));
+      backdrop-filter: blur(2px);
+      box-shadow:
+        inset 0 0 24px rgba(0, 242, 255, 0.06),
+        0 0 0 1px rgba(79, 172, 254, 0.06);
+      pointer-events: auto;
+      overflow: hidden;
+    }
+
+    .overlay-panel::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 242, 255, 0.10);
+      background:
+        linear-gradient(90deg, rgba(0, 242, 255, 0.00), rgba(0, 242, 255, 0.035), rgba(0, 242, 255, 0.00));
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .overlay-panel.left {
+      left: 18px;
+    }
+
+    .overlay-panel.right {
+      right: 18px;
+    }
+
+    .overlay-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(0, 242, 255, 0.0), rgba(0, 242, 255, 0.08), rgba(0, 242, 255, 0.0));
+      opacity: 0.35;
+      transform: translateX(-40%);
+      animation: panelSweep 6.5s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes panelSweep {
+      0% {
+        transform: translateX(-60%);
+      }
+
+      100% {
+        transform: translateX(60%);
+      }
+    }
+
+    .screen-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0, 242, 255, 0.14);
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--accent-cyan);
+      letter-spacing: 1px;
+    }
+
+    .screen-title .sub {
+      color: rgba(0, 242, 255, 0.55);
+      font-size: 11px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric-card {
+      position: relative;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 242, 255, 0.16);
+      background:
+        radial-gradient(120px 80px at 20% 20%, rgba(0, 242, 255, 0.12), transparent 60%),
+        linear-gradient(180deg, rgba(7, 18, 28, 0.35), rgba(7, 18, 28, 0.15));
+      box-shadow: inset 0 0 18px rgba(0, 242, 255, 0.06);
+    }
+
+    .metric-card .k {
+      font-size: 11px;
+      color: rgba(0, 242, 255, 0.7);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px;
+    }
+
+    .metric-card .v {
+      margin-top: 6px;
+      font-size: 18px;
+      line-height: 1.1;
+      color: rgba(255, 255, 255, 0.92);
+      font-family: 'Share Tech Mono', monospace;
+      text-shadow: 0 0 10px rgba(0, 242, 255, 0.18);
+    }
+
+    .metric-card .u {
+      margin-left: 6px;
+      font-size: 11px;
+      color: rgba(0, 242, 255, 0.65);
+    }
+
+    .status-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(79, 172, 254, 0.16);
+      background: linear-gradient(90deg, rgba(79, 172, 254, 0.10), rgba(0, 242, 255, 0.05));
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .status-strip .label {
+      color: rgba(0, 242, 255, 0.7);
+      letter-spacing: 1px;
+      font-size: 11px;
+    }
+
+    .status-strip .state {
+      color: rgba(0, 242, 255, 0.95);
+      font-size: 12px;
+    }
+
+    .alarm-list {
       flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alarm-item {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 140, 0, 0.22);
+      background: linear-gradient(180deg, rgba(255, 140, 0, 0.08), rgba(7, 18, 28, 0.12));
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    #energy-pipes .hx-outer {
+      stroke-width: 10;
+      opacity: 0.26;
+      animation: pipeFlicker 2.6s ease-in-out infinite;
+    }
+
+    @keyframes pipeDashFlowYellow {
+      0% {
+        stroke-dashoffset: 0;
+      }
+
+      100% {
+        stroke-dashoffset: -18;
+      }
+    }
+
+    /* 管道流动效果 */
+    #energy-pipes .pipe-core {
+      animation: pipeDashFlow 2s linear infinite;
+    }
+
+    @keyframes flowAnimation {
+      0% {
+        stroke-dashoffset: 0;
+      }
+
+      100% {
+        stroke-dashoffset: -15;
+      }
+    }
+
+    /* 流动粒子效果 */
+    .flow-particle {
+      fill: #00f2ff;
+      filter: drop-shadow(0 0 3px rgba(0, 242, 255, 0.75));
+      animation: particleFlow 3s linear infinite;
+    }
+
+    @keyframes particleFlow {
+      0% {
+        opacity: 0;
+        transform: translateX(0);
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+    }
+
+    /* 3D透视网格背景 */
+    .perspective-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      perspective: 1000px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .grid-3d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(60deg) translateZ(-50px);
+    }
+
+    .grid-lines {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 242, 255, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.15) 1px, transparent 1px);
+      background-size: 30px 30px;
+      animation: gridFlow 8s linear infinite;
+    }
+
+    @keyframes gridFlow {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      100% {
+        transform: translate(30px, 30px);
+      }
+    }
+
+    /* Canvas粒子背景 */
+    #particleCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.6;
+    }
+
+    /* 扫描雷达角标 */
+    .radar-scanner {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      z-index: 15;
+    }
+
+    .radar-scanner.top-left {
+      top: 10px;
+      left: 10px;
+    }
+
+    .radar-scanner.top-right {
+      top: 10px;
+      right: 10px;
+      transform: rotate(90deg);
+    }
+
+    .radar-scanner.bottom-left {
+      bottom: 10px;
+      left: 10px;
+      transform: rotate(-90deg);
+    }
+
+    .radar-scanner.bottom-right {
+      bottom: 10px;
+      right: 10px;
+      transform: rotate(180deg);
+    }
+
+    .radar-scanner::before,
+    .radar-scanner::after {
+      content: '';
+      position: absolute;
+      background: #00f2ff;
+      box-shadow: 0 0 8px rgba(0, 242, 255, 0.8);
+    }
+
+    .radar-scanner::before {
+      width: 20px;
+      height: 1px;
+      top: 5px;
+      left: 5px;
+      animation: radarScan 3s linear infinite;
+    }
+
+    .radar-scanner::after {
+      width: 1px;
+      height: 20px;
+      top: 5px;
+      left: 5px;
+      animation: radarScan 3s linear infinite reverse;
+    }
+
+    @keyframes radarScan {
+
+      0%,
+      100% {
+        opacity: 0.3;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+
+    /* 数据标签引出线 */
+    .data-label {
+      position: absolute;
+      z-index: 12;
+    }
+
+    .data-label::before {
+      content: '';
+      position: absolute;
+      width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, #00f2ff 0%, transparent 100%);
+      top: 50%;
+      left: -40px;
+      transform: rotate(-45deg);
+      transform-origin: right center;
+    }
+
+    .data-label-content {
+      background: rgba(13, 31, 46, 0.9);
+      border: 1px solid #00f2ff;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #00f2ff;
+      text-shadow: 0 0 5px rgba(0, 242, 255, 0.5);
+      box-shadow: 0 0 12px rgba(0, 242, 255, 0.8);
+      position: relative;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+    }
+
+    @keyframes pipeDashFlow {
+      0% {
+        stroke-dashoffset: 0;
+      }
+
+      100% {
+        stroke-dashoffset: -120;
+      }
+    }
+
+    @keyframes pipeFlicker {
+
+      0%,
+      100% {
+        opacity: 0.95;
+      }
+
+      50% {
+        opacity: 0.78;
+      }
+    }
+
+    /* 循环泵旋转动画 */
+    .pump-impeller {
+      animation: pumpRotate 2s linear infinite;
+      transform-origin: 0px 0px;
+    }
+
+    @keyframes pumpRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #energy-pipes path {
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* 高科技发光管道 */
+    #energy-pipes .pipe-solid {
+      stroke: rgba(0, 212, 255, 0.8);
+      stroke-width: 14;
+      opacity: 0.8;
+      fill: none;
+      filter: url(#pipeGlow);
+    }
+
+    #energy-pipes .pipe-core {
+      stroke: #00d4ff;
+      stroke-width: 4;
+      stroke-dasharray: 30 20;
+      stroke-linecap: round;
+      opacity: 0.8;
+      animation: pipeDashFlow 3s linear infinite;
+      fill: none;
+      filter: url(#pipeGlow);
+    }
+
+    #energy-pipes .pipe-aux {
+      opacity: 0.6;
+      stroke-width: 3;
+      stroke-dasharray: 5 15;
+      stroke: #4facfe;
+      animation-duration: 2.5s;
+      filter: url(#pipeGlow);
+    }
+
+    /* 高科技数据面板 */
+    .tech-panel {
+      position: absolute;
+      background: linear-gradient(135deg,
+          rgba(255, 0, 80, 0.15) 0%,
+          rgba(255, 0, 120, 0.08) 50%,
+          rgba(200, 0, 100, 0.15) 100%);
+      border: 1px solid rgba(255, 0, 120, 0.4);
+      border-radius: 4px;
+      padding: 8px 12px;
+      backdrop-filter: blur(8px);
+      box-shadow:
+        0 0 20px rgba(255, 0, 120, 0.2),
+        inset 0 0 20px rgba(255, 0, 120, 0.05);
+      font-family: 'Share Tech Mono', monospace;
+      color: #ffffff;
+      font-size: 11px;
+      min-width: 140px;
+    }
+
+    .tech-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(45deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 255, 255, 0.03) 2px,
+          rgba(255, 255, 255, 0.03) 4px);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .tech-panel .label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 9px;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tech-panel .value {
+      color: #00ffff;
+      font-size: 14px;
+      font-weight: bold;
+      text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+    }
+
+    .tech-panel .unit {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 10px;
+      margin-left: 4px;
+    }
+
+    #pipe-nodes circle {
+      fill: rgba(0, 242, 255, 0.75);
+      stroke: rgba(0, 242, 255, 0.95);
+      stroke-width: 1;
+    }
+
+    #pipe-ticks line {
+      stroke: rgba(0, 242, 255, 0.6);
+      stroke-width: 1;
+      opacity: 0.8;
+    }
+
+    /* 3D机组容器 */
+    .unit-3d-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 3D换热器样式 */
+    .heat-exchanger-3d {
+      width: 400px;
+      height: 250px;
+      position: relative;
+      perspective: 800px;
+      filter: drop-shadow(0 0 20px #00f2ff) drop-shadow(0 0 40px #00f2ff);
+      animation: unitPulse 3s ease-in-out infinite;
+    }
+
+    .exchanger-body {
+      width: 100%;
+      height: 180px;
+      position: relative;
+      background: linear-gradient(135deg, #1a3a52 0%, #0d1f2e 50%, #1a3a52 100%);
+      border-radius: 20px;
+      border: 2px solid #00f2ff;
+      box-shadow:
+        inset 0 0 20px rgba(0, 242, 255, 0.2),
+        0 0 30px rgba(0, 242, 255, 0.3);
+      transform-style: preserve-3d;
+      transform: rotateX(10deg) rotateY(-5deg);
+    }
+
+    .end-cap {
+      position: absolute;
+      width: 40px;
+      height: 180px;
+      background: linear-gradient(90deg, #2a4a6a 0%, #1a3a52 50%, #2a4a6a 100%);
+      border: 2px solid #00f2ff;
+      border-radius: 10px;
+      top: 0;
+      box-shadow:
+        inset 0 0 15px rgba(0, 242, 255, 0.3),
+        0 0 20px rgba(0, 242, 255, 0.2);
+    }
+
+    .end-cap.left {
+      left: -20px;
+      transform: rotateY(90deg) translateZ(20px);
+    }
+
+    .end-cap.right {
+      right: -20px;
+      transform: rotateY(-90deg) translateZ(20px);
+    }
+
+    .tube-bundle {
+      position: absolute;
+      width: 100%;
+      height: 160px;
+      top: 10px;
+      left: 0;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    .tube-row {
+      position: absolute;
+      width: 100%;
+      height: 8px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .tube {
+      width: 15px;
+      height: 8px;
+      background: linear-gradient(90deg, #4a7a9a 0%, #6a9aba 50%, #4a7a9a 100%);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 242, 255, 0.5);
+      box-shadow:
+        inset 0 0 3px rgba(0, 242, 255, 0.4),
+        0 0 5px rgba(0, 242, 255, 0.2);
+      animation: tubeGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes tubeGlow {
+      0% {
+        box-shadow:
+          inset 0 0 3px rgba(0, 242, 255, 0.4),
+          0 0 5px rgba(0, 242, 255, 0.2);
+      }
+
+      100% {
+        box-shadow:
+          inset 0 0 6px rgba(0, 242, 255, 0.8),
+          0 0 10px rgba(0, 242, 255, 0.4);
+      }
+    }
+
+    .pipe-inlet,
+    .pipe-outlet {
+      position: absolute;
+      width: 60px;
+      height: 30px;
+      background: linear-gradient(135deg, #2a4a6a 0%, #1a3a52 100%);
+      border: 2px solid #00f2ff;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: #00f2ff;
+      text-shadow: 0 0 5px #00f2ff;
+      box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+    }
+
+    .pipe-inlet {
+      top: 20px;
+      left: -30px;
+    }
+
+    .pipe-outlet {
+      bottom: 20px;
+      right: -30px;
+    }
+
+    .pipe-flange {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #00f2ff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00f2ff;
+      animation: flangePulse 1.5s ease-in-out infinite;
+    }
+
+    .pipe-inlet .pipe-flange {
+      right: -5px;
+    }
+
+    .pipe-outlet .pipe-flange {
+      left: -5px;
+    }
+
+    @keyframes flangePulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 10px #00f2ff;
+        transform: scale(1);
+      }
+
+      50% {
+        box-shadow: 0 0 20px #00f2ff;
+        transform: scale(1.2);
+      }
+    }
+
+    .support-base {
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 20px;
+      background: linear-gradient(90deg, #1a3a52 0%, #2a4a6a 50%, #1a3a52 100%);
+      border: 1px solid #00f2ff;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .support-base::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 10px;
+      background: #0d1f2e;
+      border: 1px solid #00f2ff;
+      border-radius: 5px;
+    }
+
+    @keyframes unitPulse {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 20px #00f2ff) drop-shadow(0 0 40px #00f2ff);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 30px #00f2ff) drop-shadow(0 0 60px #00f2ff);
+      }
+    }
+
+    /* HUD装饰边框 */
+    .hud-frame {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      border: 2px solid rgba(0, 242, 255, 0.3);
+      border-radius: 12px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .hud-corner {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 1px solid #00f2ff;
+    }
+
+    .hud-corner.top-left {
+      top: -2px;
+      left: -2px;
+      border-right: none;
+      border-bottom: none;
+      border-top-left-radius: 8px;
+    }
+
+    .hud-corner.top-right {
+      top: -2px;
+      right: -2px;
+      border-left: none;
+      border-bottom: none;
+      border-top-right-radius: 8px;
+    }
+
+    .hud-corner.bottom-left {
+      bottom: -2px;
+      left: -2px;
+      border-right: none;
+      border-top: none;
+      border-bottom-left-radius: 8px;
+    }
+
+    .hud-corner.bottom-right {
+      bottom: -2px;
+      right: -2px;
+      border-left: none;
+      border-top: none;
+      border-bottom-right-radius: 8px;
+    }
+
+    .hud-label {
+      position: absolute;
+      color: #00f2ff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      background: rgba(0, 242, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 2px;
+      border: 1px solid rgba(0, 242, 255, 0.3);
+    }
+
+    .hud-label.top-left {
+      top: -15px;
+      left: 10px;
+    }
+
+    .hud-label.bottom-right {
+      bottom: -15px;
+      right: 10px;
+    }
+
+    /* 六边形数据标签 */
+    .hex-label {
+      position: absolute;
+      width: 80px;
+      height: 60px;
+      background: rgba(0, 242, 255, 0.05);
+      border: 1px solid rgba(0, 242, 255, 0.4);
+      clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: oklch(0.5 0.2 15 / 0.05);
-      --device-fill: oklch(0.15 0.03 220 / 0.9);
+      font-family: 'Share Tech Mono', monospace;
+      color: #00f2ff;
+      font-size: 10px;
+      text-shadow: 0 0 5px #00f2ff;
+    }
+
+    .hex-value {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .hex-unit {
+      font-size: 8px;
+      opacity: 0.8;
+    }
+
+    /* 科技感边框装饰 */
+    .tech-border {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(0, 242, 255, 0.3);
+      pointer-events: none;
+    }
+
+    .tech-border::before,
+    .tech-border::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #00f2ff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00f2ff;
+    }
+
+    .tech-border.top-left {
+      top: 10px;
+      left: 10px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .tech-border.top-left::before {
+      top: -3px;
+      left: -3px;
+    }
+
+    .tech-border.top-right {
+      top: 10px;
+      right: 10px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .tech-border.top-right::before {
+      top: -3px;
+      right: -3px;
+    }
+
+    .tech-border.bottom-left {
+      bottom: 10px;
+      left: 10px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .tech-border.bottom-left::before {
+      bottom: -3px;
+      left: -3px;
+    }
+
+    .tech-border.bottom-right {
+      bottom: 10px;
+      right: 10px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .tech-border.bottom-right::before {
+      bottom: -3px;
+      right: -3px;
+    }
+
+    /* 数字跳动动画 */
+    .tech-number {
+      animation: numberPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes numberPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+      }
     }
 
     /* 图表容器 */
@@ -415,27 +1473,243 @@
     .theme-light .col-sub-header {
       background: oklch(0 0 0 / 0.05);
     }
+
+    /* 图表加载提示 */
+    .charts-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-blue);
+      font-size: 16px;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    .charts-loading.hidden {
+      display: none;
+    }
+
+    /* 白天模式样式支持 */
+    body.light-mode {
+      --bg-color: #f8fafc;
+      --bg-panel: rgba(255, 255, 255, 0.85);
+      --bg-header: rgba(255, 255, 255, 0.95);
+      --border-color: #cbd5e1;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --accent-blue: #2563eb;
+      --pipe-color: rgba(37, 99, 235, 1);
+
+      background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%) !important;
+      color: #1e293b !important;
+    }
+
+    body.light-mode::before {
+      background:
+        repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(37, 99, 235, 0.05) 2px,
+          transparent 4px),
+        repeating-linear-gradient(90deg,
+          transparent,
+          transparent 2px,
+          rgba(37, 99, 235, 0.05) 2px,
+          transparent 4px);
+    }
+
+    body.light-mode .dashboard-root {
+      background-color: #f8fafc;
+    }
+
+    body.light-mode .side-nav {
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    body.light-mode .nav-item {
+      color: #64748b;
+    }
+
+    body.light-mode .nav-item:hover,
+    body.light-mode .nav-item.active {
+      color: #2563eb;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(79, 172, 254, 0.1) 100%);
+      border-left: 3px solid #2563eb;
+    }
+
+    body.light-mode .nav-item .iconfont {
+      color: #94a3b8;
+    }
+
+    body.light-mode .nav-item:hover .iconfont,
+    body.light-mode .nav-item.active .iconfont {
+      color: #2563eb;
+    }
+
+    body.light-mode .nav-item.active .nav-label {
+      color: #2563eb !important;
+      font-weight: bold;
+    }
+
+    body.light-mode .nav-item.active::after {
+      background: #2563eb;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    }
+
+    /* 修复白色模式下的黑色面板 */
+    body.light-mode .overlay-panel {
+      background:
+        radial-gradient(280px 220px at 20% 20%, rgba(37, 99, 235, 0.05), transparent 60%),
+        rgba(255, 255, 255, 0.85);
+      border-color: rgba(37, 99, 235, 0.2);
+      box-shadow:
+        inset 0 0 24px rgba(37, 99, 235, 0.03),
+        0 4px 12px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(10px);
+    }
+
+    body.light-mode .overlay-panel::after {
+      border-color: rgba(37, 99, 235, 0.1);
+      background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.02), transparent);
+    }
+
+    body.light-mode .overlay-panel::before {
+      background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.05), transparent);
+    }
+
+    /* 修复工艺流程图区域背景（白天模式下不再发黑） */
+    body.light-mode .process-content::before {
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(37, 99, 235, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 70%, rgba(14, 165, 233, 0.05) 0%, transparent 55%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+    }
+
+    body.light-mode .process-content::after {
+      background-image:
+        linear-gradient(rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.06) 1px, transparent 1px);
+      opacity: 1;
+    }
+
+    body.light-mode #processContainer::before {
+      background:
+        radial-gradient(600px 420px at 50% 55%, rgba(37, 99, 235, 0.08), transparent 62%),
+        radial-gradient(520px 360px at 50% 55%, rgba(14, 165, 233, 0.06), transparent 64%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(248, 250, 252, 0.35));
+      opacity: 1;
+    }
+
+    body.light-mode #processContainer::after {
+      background:
+        repeating-linear-gradient(0deg, rgba(37, 99, 235, 0.00) 0px, rgba(37, 99, 235, 0.00) 2px, rgba(37, 99, 235, 0.05) 3px, rgba(37, 99, 235, 0.00) 6px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.00), rgba(37, 99, 235, 0.07), rgba(37, 99, 235, 0.00));
+      mix-blend-mode: normal;
+      opacity: 0.25;
+    }
+
+    body.light-mode .flow-stage {
+      border-color: rgba(37, 99, 235, 0.22);
+      background:
+        radial-gradient(600px 520px at 50% 50%, rgba(37, 99, 235, 0.06), transparent 62%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(248, 250, 252, 0.55));
+      box-shadow:
+        inset 0 0 22px rgba(37, 99, 235, 0.04),
+        0 0 0 1px rgba(37, 99, 235, 0.06),
+        0 12px 28px rgba(2, 6, 23, 0.06);
+    }
+
+    body.light-mode .flow-stage::after {
+      background: radial-gradient(closest-side, rgba(37, 99, 235, 0.10), transparent 70%);
+      opacity: 0.18;
+    }
+
+    /* 修复底部背景 */
+    body.light-mode .flow-stage::before {
+      background:
+        linear-gradient(0deg, rgba(37, 99, 235, 0.04), transparent 35%, rgba(37, 99, 235, 0.03)),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 34px, rgba(37, 99, 235, 0.02) 35px, transparent 36px);
+      opacity: 0.8;
+    }
+
+    /* 修复网格背景 */
+    body.light-mode .grid-lines {
+      background-image:
+        linear-gradient(rgba(37, 99, 235, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.08) 1px, transparent 1px);
+    }
+
+    /* 修复卡片标题 */
+    body.light-mode .panel-title {
+      color: #1e40af;
+    }
+
+    body.light-mode .panel-title::before {
+      background: #2563eb;
+    }
+
+    /* 修复数据值颜色 */
+    body.light-mode .data-value {
+      color: #1e293b;
+      text-shadow: none;
+    }
+
+    /* 修复状态标签 */
+    body.light-mode .status-tag.online {
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    /* 修复按钮样式 */
+    body.light-mode .action-btn {
+      background: rgba(37, 99, 235, 0.05);
+      border-color: rgba(37, 99, 235, 0.2);
+      color: #2563eb;
+    }
+
+    body.light-mode .action-btn:hover {
+      background: #2563eb;
+      color: white;
+    }
   </style>
 </head>
 
 
 <body>
+  <!-- 主题切换按钮 -->
   <div class="dashboard-root" id="app">
+    <canvas id="particleCanvas" aria-hidden="true"></canvas>
     <aside class="side-nav">
       <div class="nav-wrapper">
-        <div class="nav-item active" onclick="switchNav(this)">
-          <i class="iconfont nav-icon">&#xe623;</i>
-          <div class="nav-label">运行监控</div>
+        <div class="nav-item" onclick="window.location.href='home.html'">
+          <i class="iconfont nav-icon">&#xe603;</i>
+          <div class="nav-label">首页</div>
         </div>
-        <div class="nav-item" onclick="switchNav(this)">
-          <i class="iconfont nav-icon">&#xe948;</i>
-          <div class="nav-label">能耗分析</div>
+        <div class="nav-item active" onclick="window.location.href='smart_heating_station_terminal.html'">
+          <i class="iconfont nav-icon">&#xe84a;</i>
+          <div class="nav-label">我的换热站</div>
         </div>
-        <div class="nav-item" onclick="switchNav(this)">
-          <i class="iconfont nav-icon">&#xe60b;</i>
-          <div class="nav-label">报警管理</div>
+        <div class="nav-item" onclick="window.location.href='station_patrol.html'">
+          <i class="iconfont nav-icon">&#xe65c;</i>
+          <div class="nav-label">一键巡站</div>
         </div>
-        <div class="nav-item" onclick="switchNav(this)">
+        <div class="nav-item" onclick="window.location.href='station_startup.html'">
+          <i class="iconfont nav-icon">&#xe6db;</i>
+          <div class="nav-label">一键启停</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='health_monitor.html'">
+          <i class="iconfont nav-icon">&#xe61f;</i>
+          <div class="nav-label">健康监测</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='asset_inventory.html'">
+          <i class="iconfont nav-icon">&#xe668;</i>
+          <div class="nav-label">资产盘点</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='system_settings.html'">
           <i class="iconfont nav-icon">&#xe602;</i>
           <div class="nav-label">系统设置</div>
         </div>
@@ -550,436 +1824,614 @@
 
         <div class="panel">
           <div class="panel-header">机组工艺流程图</div>
-          <div class="process-content" id="processContainer" style="position: relative; flex: 1; background: var(--proc-bg); overflow: hidden; height: 100%; 
-            --proc-bg: radial-gradient(circle at center, #1b3352 0%, #0a1524 100%);
-            --pipe-color: rgba(255, 255, 255, 0.3);
-            ">
-            <svg id="process-svg" viewBox="0 0 800 480" style="width: 100%; height: 100%;">
-              <defs>
-                <linearGradient id="hot-flow-v2" x1="0" y1="0" x2="0" y2="100%" spreadMethod="repeat">
-                  <stop offset="0%" stop-color="#ff3b00" />
-                  <stop offset="50%" stop-color="#ff9e44" />
-                  <stop offset="100%" stop-color="#ff3b00" />
-                  <animateTransform attributeName="gradientTransform" type="translate" from="0,0" to="0,1" dur="2s"
-                    repeatCount="indefinite" />
-                </linearGradient>
+          <div class="process-content" id="processContainer"
+            style="flex: 1; position: relative; overflow: hidden; height: 100%; border-radius: 8px;">
 
-                <linearGradient id="cold-flow-v2" x1="0" y1="0" x2="0" y2="100%" spreadMethod="repeat">
-                  <stop offset="0%" stop-color="#0077cc" />
-                  <stop offset="50%" stop-color="#4db8ff" />
-                  <stop offset="100%" stop-color="#0077cc" />
-                  <animateTransform attributeName="gradientTransform" type="translate" from="0,0" to="0,-1" dur="2.5s"
-                    repeatCount="indefinite" />
-                </linearGradient>
+            <!-- React SCADA 版本 -->
+            <!-- React & ReactDOM -->
+            <script src="../libs/react.production.min.js"></script>
+            <script src="../libs/react-dom.production.min.js"></script>
 
-                <path id="stream-path-template"
-                  d="M 0 0 C 5 10, 5 30, 0 40 C -5 50, -5 70, 0 80 C 5 90, 5 110, 0 120 C -5 130, -5 150, 0 160 C 5 170, 5 190, 0 200 C -5 210, -5 230, 0 240 C 5 250, 5 270, 0 280" />
+            <!-- Babel -->
+            <script src="../libs/babel.min.js"></script>
 
-                <filter id="glow-neon" x="-20%" y="-10%" width="140%" height="120%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
+            <!-- Tailwind CSS -->
+            <script src="../libs/tailwindcss.js"></script>
 
-                <filter id="heat-shimmer" x="-50%" y="-50%" width="200%" height="200%">
-                  <!-- 1. 基础发光 (增强范围和强度) -->
-                  <!-- 减小 stdDeviation 以收紧光晕，提高中心亮度 -->
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
-                  <feFlood flood-color="#5d809a" result="glowColor" />
-                  <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
-
-                  <!-- 2. 动态湍流纹理 (模拟热浪) -->
-                  <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="noise">
-                    <animate attributeName="baseFrequency" values="0.015;0.025;0.015" dur="10s"
-                      repeatCount="indefinite" />
-                  </feTurbulence>
-                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"
-                    result="distorted" />
-
-                  <!-- 3. 组合：辉光 + 原始图形 (确保 SourceGraphic 在最上层以保持清晰度) -->
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="glow" /> <!-- 叠加第二次增强亮度 -->
-                    <feMergeNode in="distorted" /> <!-- 扭曲后的本体 -->
-                    <!-- 关键修复：添加原始图形在最顶层，并略微混合，以恢复对比度 -->
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <!-- 新增：图标辉光光环特效 (增强版) -->
-                <filter id="icon-glow" x="-50%" y="-50%" width="200%" height="200%">
-                  <!-- 1. 提取Alpha通道并扩充，形成外轮廓 (扩大范围) -->
-                  <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="thicken" />
-                  <!-- 2. 高斯模糊 (增加模糊半径，使光晕更散) -->
-                  <feGaussianBlur in="thicken" stdDeviation="5" result="blurred" />
-                  <!-- 3. 设置光环颜色 (青色) -->
-                  <feFlood flood-color="#22a4d7" result="glowColor" />
-                  <!-- 4. 混合颜色与模糊层 -->
-                  <feComposite in="glowColor" in2="blurred" operator="in" result="softGlow_colored" />
-                  <!-- 5. 组合：光环(叠加两次以增强亮度) + 原始图形 -->
-                  <feMerge>
-                    <feMergeNode in="softGlow_colored" />
-                    <feMergeNode in="softGlow_colored" /> <!-- 叠加第二次增强亮度 -->
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                <filter id="particle-glow" x="-50%" y="-50%" width="200%" height="200%">
-                  <!-- 增加模糊半径，让粒子融合感更强 -->
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
-                  <feColorMatrix in="blur" type="matrix" values="
-                       1 0 0 0 0
-                       0 1 0 0 0
-                       0 0 1 0 0
-                       0 0 0 25 -5" result="glow" /> <!-- 增强 Alpha 通道对比度，让边缘更锐利发光 -->
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              <!-- 流体粒子 -->
-              <g id="flow-particles" filter="url(#particle-glow)"></g>
-              <!-- 管道 -->
-              <g fill="none" stroke-width="17" stroke-linecap="round" opacity="0.6">
-                <path id="pipe-h-in" d="M50,140 L350,140" stroke="var(--pipe-color)" />
-                <path id="pipe-h-out" d="M350,340 L50,340" stroke="var(--pipe-color)" />
-                <path id="pipe-c-out" d="M450,140 L750,140" stroke="var(--pipe-color)" />
-                <path id="pipe-c-in" d="M750,340 L450,340" stroke="var(--pipe-color)" />
-                <!-- <path d="M700,290 L700,331" stroke="var(--pipe-color)" stroke-width="8" stroke-dasharray="2,2" /> -->
-              </g>
-
-              <!-- 板式换热器 -->
-              <g transform="translate(360, 90)">
-                <!-- 1. 基础图形：应用动态热力滤镜 (发光 + 扭曲) -->
-                <image x="-15" y="-25" width="120" height="350" href="icon/heat.svg" filter="url(#heat-shimmer)" />
-
-                <!-- 2. 叠加层：能量扫描特效 -->
-                <!-- 使用 mask 或直接叠加半透明 rect 实现扫描光效 -->
-                <rect x="15" y="0" width="60" height="300" fill="url(#heat-flow-gradient)"
-                  style="pointer-events: none; mix-blend-mode: screen;" />
-
-                <!-- 保留文字标签 -->
-                <text x="45" y="160" text-anchor="middle" fill="#ffd103" font-size="20" font-weight="bolder"
-                  style="writing-mode: tb; letter-spacing: 4px; pointer-events: none; text-shadow: 0 0 5px rgba(255, 209, 3, 0.8);">
-                  板式换热器
-                </text>
-              </g>
-
-              <!-- 循环泵 -->
-              <g transform="translate(620, 340)">
-                <g filter="url(#icon-glow)">
-                  <circle r="20" fill="#020814" stroke="#53caf5" stroke-width="4" />
-                  <g class="pump-fan-anim" transform-origin="center">
-                    <path d="M0,0 Q6,-12 0,-15 Q-6,-12 0,0" fill="#53caf5" />
-                    <path d="M0,0 Q12,6 15,0 Q12,-6 0,0" fill="#53caf5" />
-                    <path d="M0,0 Q-6,12 0,15 Q6,12 0,0" fill="#53caf5" />
-                    <path d="M0,0 Q-12,-6 -15,0 Q-12,6 0,0" fill="#53caf5" />
-                  </g>
-                </g>
-                <text y="42" text-anchor="middle" fill="#53caf5" font-size="12" font-weight="bold">循环泵</text>
-              </g>
-              <!-- 循环泵 -->
-              <g transform="translate(620, 140)">
-                <g filter="url(#icon-glow)">
-                  <circle r="20" fill="#020814" stroke="#53caf5" stroke-width="4" />
-                  <g class="pump-fan-anim" transform-origin="center">
-                    <path d="M0,0 Q6,-12 0,-15 Q-6,-12 0,0" fill="#53caf5" />
-                    <path d="M0,0 Q12,6 15,0 Q12,-6 0,0" fill="#53caf5" />
-                    <path d="M0,0 Q-6,12 0,15 Q6,12 0,0" fill="#53caf5" />
-                    <path d="M0,0 Q-12,-6 -15,0 Q-12,6 0,0" fill="#53caf5" />
-                  </g>
-                </g>
-                <text y="42" text-anchor="middle" fill="#53caf5" font-size="12" font-weight="bold">循环泵</text>
-              </g>
-
-              <!-- 补水站系统 -->
-              <!-- <g transform="translate(650, 240)">
-                <rect width="100" height="45" rx="4" fill="var(--device-fill)" stroke="#4facfe"
-                  stroke-dasharray="3,3" />
-                <text x="50" y="28" text-anchor="middle" fill="#4facfe" font-size="13" font-weight="bold">补水站系统</text>
-              </g> -->
-
-              <g transform="translate(50, 0)">
-                <g>
-                  <text x="0" y="24" class="iconfont" style="font-size: 20px; fill: #ffffff;">&#xe632;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">一次供压:</text>
-                  <text x="95" y="18" fill="#00f2fe" font-size="18" font-weight="bold">0.75 MPa</text>
-                </g>
-                <g transform="translate(0,35)">
-                  <text x="0" y="18" class="iconfont" style="font-size: 18px; fill: #ffffff;">&#xe89e;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">一次供温:</text>
-                  <text x="95" y="18" fill="#ff0303" font-size="18" font-weight="bold">96.01 ℃</text>
-                </g>
-              </g>
-
-              <g transform="translate(50, 420)">
-                <g>
-                  <text x="0" y="24" class="iconfont" style="font-size: 20px; fill: #ffffff;">&#xe632;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">一次回压:</text>
-                  <text x="95" y="18" fill="#00d4fe" font-size="18" font-weight="bold">0.70 MPa</text>
-                </g>
-                <g transform="translate(0,35)">
-                  <text x="0" y="18" class="iconfont" style="font-size: 18px; fill: #ffffff;">&#xe89e;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">一次回温:</text>
-                  <text x="95" y="18" fill="#ff7f17" font-size="18" font-weight="bold">46.13 ℃</text>
-                </g>
-              </g>
-
-
-              <g transform="translate(560, 0)">
-                <g>
-                  <text x="0" y="24" class="iconfont" style="font-size: 20px; fill: #ffffff;">&#xe632;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">二次供压:</text>
-                  <text x="95" y="18" fill="#19a1e0" font-size="18" font-weight="bold">0.53 MPa</text>
-                </g>
-                <g transform="translate(0,35)">
-                  <text x="0" y="18" class="iconfont" style="font-size: 18px; fill: #ffffff;">&#xe89e;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">二次供温:</text>
-                  <text x="95" y="18" fill="#f55e18" font-size="18" font-weight="bold">50.07 ℃</text>
-                </g>
-              </g>
-
-              <g transform="translate(560, 420)">
-                <g>
-                  <text x="0" y="24" class="iconfont" style="font-size: 20px; fill: #ffffff;">&#xe632;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">二次回压:</text>
-                  <text x="95" y="18" fill="#1986e0" font-size="18" font-weight="bold">0.45 MPa</text>
-                </g>
-                <g transform="translate(0,35)">
-                  <text x="0" y="18" class="iconfont" style="font-size: 18px; fill: #ffffff;">&#xe89e;</text>
-                  <text x="28" y="18" fill="#ffffff" font-size="12">二次回温:</text>
-                  <text x="95" y="18" fill="#ffa442" font-size="18" font-weight="bold">42.92 ℃</text>
-                </g>
-              </g>
-
-              <!-- 阀门 -->
-
-              <g id="valve-mini-styled" transform="translate(200, 140)">
-                <image x="-38" y="-20" width="40" height="40" href="icon/Valve.svg" filter="url(#icon-glow)" />
-
-                <text x="0" y="-30" text-anchor="middle" font-family="Arial" font-weight="bold"
-                  style="fill: #ffcc00; font-size: 12px; letter-spacing: 0.3px;">
-                  阀门开度: <tspan fill="#00f2fe">60.27%</tspan>
-                </text>
-              </g>
-              <!-- 机组流量 -->
-              <g id="flow-sensor-group" transform="translate(200, 340)">
-                <image x="-38" y="-16" width="40" height="40" href="icon/Flow Meter.svg" filter="url(#icon-glow)" />
-
-                <g transform="translate(10, -45)">
-                  <text x="0" y="16" text-anchor="middle" font-family="Arial"
-                    style="fill: #3cb8ff; font-size: 12px; font-weight: bold; letter-spacing: 0.5px;">
-                    机组流量: <tspan fill="#00f2fe">124.5</tspan>
-                    <tspan fill="#ffffff" font-size="10">t/h</tspan>
-                  </text>
-                </g>
-              </g>
-            </svg>
-
-
+            <!-- Tailwind Config for Custom SCADA Theme -->
             <script>
-              /* 初始化动画效果 */
-              (function init() {
-                const run = () => {
-                  if (!window.gsap || !window.MotionPathPlugin) return setTimeout(run, 300);
-                  gsap.registerPlugin(MotionPathPlugin);
-
-                  // 1. 入场动画：设备图标优先浮现 (从中心开始)
-                  const devices = Array.from(document.querySelectorAll('#process-svg image, #process-svg circle, #process-svg rect')).filter(el => {
-                    return !el.closest('defs') && !el.closest('#flow-particles') && !el.closest('.pump-fan-anim');
-                  });
-
-                  gsap.fromTo(devices,
-                    { scale: 0, opacity: 0, transformOrigin: "center center" },
-                    {
-                      duration: 1.2,
-                      scale: 1,
-                      opacity: 1,
-                      stagger: 0.05,
-                      ease: "back.out(1.7)"
+              tailwind.config = {
+                theme: {
+                  extend: {
+                    colors: {
+                      scada: {
+                        // 深色模式 (默认)
+                        bg: '#020617',
+                        panel: '#0f172a',
+                        border: '#1e293b',
+                        cyan: '#06b6d4',
+                        blue: '#3b82f6',
+                        red: '#ef4444',
+                        orange: '#f97316',
+                        purple: '#8b5cf6',
+                        // 白天模式
+                        'light-bg': '#f8fafc',
+                        'light-panel': '#ffffff',
+                        'light-border': '#e2e8f0',
+                        'light-cyan': '#0891b2',
+                        'light-blue': '#2563eb',
+                        'light-red': '#dc2626',
+                        'light-orange': '#ea580c',
+                        'light-purple': '#7c3aed'
+                      }
+                    },
+                    animation: {
+                      'flow-fast': 'flow 1.2s linear infinite',
+                      'flow-normal': 'flow 2s linear infinite',
+                      'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                      flow: {
+                        '0%': { strokeDashoffset: '40' },
+                        '100%': { strokeDashoffset: '0' },
+                      },
+                      'pulse-glow': {
+                        '0%, 100%': { opacity: 1, filter: 'drop-shadow(0 0 12px rgba(239, 68, 68, 0.9))' },
+                        '50%': { opacity: 0.6, filter: 'drop-shadow(0 0 3px rgba(239, 68, 68, 0.3))' },
+                      }
                     }
-                  );
-
-                  // 2. 入场动画：管道在设备显示后，从中间向外绘制
-                  const pipes = Array.from(document.querySelectorAll('#process-svg path')).filter(p => {
-                    if (p.closest('defs') || p.closest('.pump-fan-anim')) return false;
-                    return true;
-                  });
-
-                  // 预设管道状态
-                  pipes.forEach(el => {
-                    const len = el.getTotalLength() || 1000;
-                    el.style.strokeDasharray = len;
-                    el.style.strokeDashoffset = len; // 初始完全隐藏
-                    el.style.opacity = 1;
-                  });
-
-                  // 管道动画：延迟到设备显示后 (delay: 1.0)
-                  // 技巧：为了实现"从中间向外"，我们需要区分进水管和出水管
-                  // 进水管(in)：方向通常是从左到右，我们需要反向绘制 (strokeDashoffset 从 -len 到 0，或者改变 path 方向，但改 path 麻烦)
-                  // 简单做法：利用 strokeDashoffset 的正负值技巧或 drawSVG 的反向 (但在无插件下，我们只能控制 offset)
-                  // 实际上，如果 path 定义是从左到右，strokeDashoffset 从 len -> 0 是从左到右画。
-                  // 换热器在中间 (x=360)，左侧管道 (in) 终点是 350，起点是 50。Path d="M50,140 L350,140"。
-                  // 要让它看起来是从 350 画到 50 (从右向左)，我们需要让 strokeDashoffset 从 -len 变到 0 吗？
-                  // 不，原生的 stroke-dasharray 动画总是沿着 path 定义的方向填充。
-                  // 如果要反向绘制，最简单的办法是：将 path 的定义反过来 (M350,140 L50,140)，或者使用 CSS 的 transform: scaleX(-1) (但这会镜像)
-                  // 这里我们采用更精细的控制：
-
-                  // 分组：左侧管道(连接换热器左边) 和 右侧管道(连接换热器右边)
-                  // 左侧管道 (id 包含 -in): d="M50...L350" -> 终点在换热器。正常绘制是从外向内。
-                  // 我们想要"从换热器向外"，即从右向左。
-                  // 右侧管道 (id 包含 -out): d="M450...L750" -> 起点在换热器。正常绘制是从内向外。符合要求。
-
-                  // 修正：根据 SVG path 定义
-                  // pipe-h-in: M50,140 L350,140 (左->右，外->内) => 需要反向视觉效果? 用户说"从换热器的中间向外面发展"
-                  // 也就是说：左侧管子应该从右向左画，右侧管子应该从左向右画。
-
-                  // 筛选需要反向绘制的管道 (左侧管道)
-                  const leftPipes = pipes.filter(p => p.id.includes('h-in') || p.id.includes('h-out')); // 实际上 h-in 和 h-out 都在左侧? 
-                  // 看 path 定义:
-                  // pipe-h-in: M50 -> 350 (左->中)
-                  // pipe-h-out: M350 -> 50 (中->左) -> 这个本身就是从中间向外画！完美。
-                  // pipe-c-out: M450 -> 750 (中->右) -> 这个本身就是从中间向外画！完美。
-                  // pipe-c-in: M750 -> 450 (右->中)
-
-                  // 所以：
-                  // pipe-h-out (一次回水) 和 pipe-c-out (二次供水) 已经是 "从中间向外" 的 path 定义。
-                  // pipe-h-in (一次供水) 和 pipe-c-in (二次回水) 是 "从外向中间" 的 path 定义。
-
-                  // 如果要统一视觉上"从中间向外"，我们需要特殊处理 h-in 和 c-in。
-                  // 但通常"流向"决定了 path 方向。如果强行改绘制方向，可能会和流向箭头冲突。
-                  // 但用户要求的是"初始化动画"效果，我们可以暂时忽略流向，只关注线条生长。
-
-                  // 方案：将 h-in 和 c-in 的 strokeDashoffset 动画设为负值方向？
-                  // 不，CSS stroke-dashoffset 只能控制显示长度，不能改变填充起始点（总是从 path 起点开始）。
-                  // 除非修改 path 的 M 点。
-
-                  // 为了满足用户"从中间向外面发展"的需求，且不破坏原有 path (影响粒子动画)，
-                  // 我们只需对那几根 "从外向内" 的管子做个小 trick：
-                  // 不，其实大部分管子(出水)本来就是从中间出来的。
-                  // 只有进水管是从外面进来的。如果进水管也从中间往外长，逻辑上有点怪（逆流而上？）。
-                  // 但为了视觉冲击力（爆炸式展开），我们可以接受。
-
-                  // 鉴于修改 path d 属性会破坏粒子动画的路径，我们保持 path 不变。
-                  // 对于 h-in (左->右) 和 c-in (右->左)，它们都是指向换热器的。
-                  // 正常绘制就是 "从外向内"。
-                  // 要变成 "从内向外" (即反向绘制)，我们需要让 dasharray 的空隙部分先显示？
-                  // 实际上，只要让所有管道都在 1.2s 后开始绘制即可，方向差异在快速动画中可能不那么明显，
-                  // 或者我们可以简单地让它们都 strokeDashoffset: len -> 0。
-
-                  // 让我们先调整时间，看看效果。如果非要反向，需要复杂的 mask 或重写 path。
-                  // 考虑到代码复杂度，先调整时机。
-
-                  gsap.to(pipes, {
-                    strokeDashoffset: 0,
-                    duration: 2.0,
-                    ease: "power2.out",
-                    delay: 1.2, // 【关键】等待设备显示完成后再开始
-                    stagger: 0.1,
-                    clearProps: "strokeDasharray,strokeDashoffset"
-                  });
-
-                  // 3. 入场动画：文字标签下落
-                  const texts = document.querySelectorAll('#process-svg text');
-                  gsap.from(texts, {
-                    duration: 1,
-                    y: -20,
-                    opacity: 0,
-                    stagger: 0.05,
-                    delay: 1,
-                    ease: "power2.out"
-                  });
-
-                  // 使用类选择器同时驱动两个泵的动画，修复了之前只能动一个的问题
-                  gsap.to(".pump-fan-anim", { rotation: 360, duration: 2, repeat: -1, ease: "none", transformOrigin: "50% 50%" });
-
-                  const container = document.getElementById("flow-particles");
-
-                  // 初始隐藏粒子容器
-                  gsap.set(container, { opacity: 0 });
-
-                  const create = (id, col, n) => {
-                    const path = document.getElementById(id);
-                    for (let i = 0; i < n; i++) {
-                      const p = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                      // 1. 随机大小，增加真实感
-                      const r = 1.5 + Math.random() * 2;
-                      p.setAttribute("r", r);
-
-                      // 2. 使用高亮颜色，配合发光滤镜
-                      p.setAttribute("fill", col);
-
-                      // 3. 移除旧的 CSS blur，改用 SVG filter
-                      // p.style.filter = "blur(1px)"; 
-
-                      // 4. 随机透明度，模拟水流层次
-                      p.setAttribute("opacity", 0.6 + Math.random() * 0.4);
-
-                      container.appendChild(p);
-
-                      // 5. 动画优化：去除 yoyo 往复运动，确保单向流动
-                      gsap.to(p, {
-                        duration: 1.5 + Math.random() * 1, // 速度稍快一点，差异化
-                        repeat: -1,
-                        ease: "none", // 管道流体通常是匀速的
-                        delay: Math.random() * -3, // 随机延迟，铺满管道
-                        motionPath: {
-                          path: path,
-                          alignOrigin: [0.5, 0.5],
-                          autoRotate: false // 圆形不需要旋转
-                        }
-                      });
-                    }
-                  };
-                  container.innerHTML = '';
-                  // 增加粒子密度，形成连续流体感
-                  create("pipe-h-in", "#ff4d4f", 25);  // 一次供水（红）
-                  create("pipe-h-out", "#ff9c6e", 20); // 一次回水（橙）
-                  create("pipe-c-in", "#69c0ff", 20);  // 二次回水（蓝）- 注意方向: 回水是进换热器
-                  create("pipe-c-out", "#ff7a45", 25); // 二次供水（热）- 注意方向: 供水是出换热器
-
-                  // 4. 入场动画：水流粒子最后淡入 (等待管道绘制完成)
-                  gsap.to(container, {
-                    duration: 1.5,
-                    opacity: 1,
-                    delay: 2.2, // 管道动画约2.5s，这里在接近结束时开始淡入
-                    ease: "power2.inOut"
-                  });
-                };
-                run();
-              })();
-
-              /* 实现等比缩放适配 */
-              function handleResize() {
-                const designWidth = 1920;
-                const designHeight = 1080;
-                const clientWidth = document.documentElement.clientWidth;
-                const clientHeight = document.documentElement.clientHeight;
-
-                const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
-
-                const app = document.getElementById('app');
-                if (app) {
-                  app.style.transform = `scale(${scale})`;
-                  const left = (clientWidth - designWidth * scale) / 2;
-                  const top = (clientHeight - designHeight * scale) / 2;
-                  app.style.left = `${left}px`;
-                  app.style.top = `${top}px`;
+                  }
                 }
               }
+            </script>
 
-              /* 窗口事件监听与初始化已移至文件底部统一管理 */
+            <style>
+              @import url('../libs/google-fonts.css');
 
-              /* 处理菜单点击高亮逻辑 */
-              function switchNav(el) {
-                const items = document.querySelectorAll('.nav-item');
-                items.forEach(item => item.classList.remove('active'));
-                el.classList.add('active');
-                console.log("已切换至: " + el.querySelector('.nav-label').innerText);
+              .scada-react-container {
+                font-family: 'Inter', sans-serif;
+                background-color: transparent;
+                /* 配合父级背景 */
+                color: white;
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: hidden;
               }
+
+              .font-mono {
+                font-family: 'Share Tech Mono', monospace;
+              }
+
+              /* 工业级正交点阵网格背景 - 深色模式 */
+              .scada-grid {
+                background-image: radial-gradient(rgba(100, 116, 139, 0.25) 1px, transparent 1px);
+                background-size: 20px 20px;
+                background-position: 0 0;
+              }
+
+              /* 白天模式样式 */
+              .light-mode {
+                background-color: #f8fafc !important;
+              }
+
+              .light-mode .scada-react-container {
+                color: #1e293b;
+              }
+
+              .light-mode .scada-grid {
+                background-image: radial-gradient(rgba(148, 163, 184, 0.3) 1px, transparent 1px);
+                background-color: #f8fafc;
+              }
+
+              .light-mode .bg-gradient-to-br {
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+              }
+
+              .light-mode .border-scada-border {
+                border-color: #e2e8f0 !important;
+              }
+
+              .light-mode .shadow-\[0_20px_50px_rgba\(0\,0\,0\,0\.8\)\] {
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+              }
+
+              .light-mode .bg-\[\#0f172a\]\/60 {
+                background-color: rgba(255, 255, 255, 0.9) !important;
+              }
+
+              .light-mode .text-gray-500 {
+                color: #64748b !important;
+              }
+
+              .light-mode .text-gray-400 {
+                color: #94a3b8 !important;
+              }
+
+              .light-mode .text-gray-300 {
+                color: #cbd5e1 !important;
+              }
+
+              .light-mode .text-white {
+                color: #1e293b !important;
+              }
+
+              .light-mode .text-\[\#9ca3af\] {
+                color: #64748b !important;
+              }
+
+              .light-mode .bg-\[\#0a0f1c\] {
+                background-color: #f8fafc !important;
+              }
+
+              .light-mode .bg-\[\#0f172a\]\/95 {
+                background-color: rgba(255, 255, 255, 0.95) !important;
+              }
+
+              .light-mode .bg-\[\#0f172a\]\/90 {
+                background-color: rgba(255, 255, 255, 0.9) !important;
+              }
+
+              .light-mode .bg-red-950\/90 {
+                background-color: rgba(254, 226, 226, 0.9) !important;
+              }
+
+              .light-mode .bg-\[\#0a0f1c\]\/90 {
+                background-color: rgba(255, 255, 255, 0.9) !important;
+              }
+
+              .light-mode .border-\[\#3b82f6\]\/30 {
+                border-color: rgba(37, 99, 235, 0.3) !important;
+              }
+
+              .light-mode .border-scada-cyan\/40 {
+                border-color: rgba(8, 145, 178, 0.4) !important;
+              }
+
+              .light-mode .border-red-500\/80 {
+                border-color: rgba(220, 38, 38, 0.8) !important;
+              }
+
+              .light-mode .border-red-500\/60 {
+                border-color: rgba(220, 38, 38, 0.6) !important;
+              }
+
+              /* 侧边导航栏白天模式 */
+              .light-mode .side-nav {
+                background: #ffffff !important;
+                border-right: 1px solid #e2e8f0 !important;
+              }
+
+              .light-mode .nav-item {
+                background: #f8fafc !important;
+                color: #1e293b !important;
+              }
+
+              .light-mode .nav-item.active {
+                background: #0891b2 !important;
+                color: #ffffff !important;
+              }
+
+              .light-mode .nav-item:hover {
+                background: #e2e8f0 !important;
+              }
+
+              /* 主容器白天模式 */
+              .light-mode .main-container {
+                background: #f8fafc !important;
+              }
+
+              .light-mode .panel {
+                background: #ffffff !important;
+                border-color: #e2e8f0 !important;
+              }
+
+              .light-mode .panel-header {
+                background: #f8fafc !important;
+                color: #1e293b !important;
+                border-color: #e2e8f0 !important;
+              }
+
+              /* 表格白天模式 */
+              .light-mode .data-table {
+                background: #ffffff !important;
+                color: #1e293b !important;
+              }
+
+              .light-mode .data-table th {
+                background: #f8fafc !important;
+                color: #1e293b !important;
+                border-color: #e2e8f0 !important;
+              }
+
+              .light-mode .data-table td {
+                border-color: #e2e8f0 !important;
+                color: #1e293b !important;
+              }
+
+              /* 其他元素白天模式 */
+              .light-mode .time-range-selector span {
+                color: #64748b !important;
+              }
+
+              .light-mode .time-range-selector span.active {
+                color: #0891b2 !important;
+              }
+
+              /* 主题切换按钮样式 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              /* 白天模式按钮样式 */
+              .light-mode .light-mode .light-mode .light-mode .light-mode .light-mode .scada-react-container ::-webkit-scrollbar {
+                display: none;
+              }
+            </style>
+
+            <!-- 主题配置 -->
+            <script src="theme-config.js"></script>
+
+            <div class="scada-react-container" id="scada-react-root">
+              <!-- React应用将在这里渲染 -->
+            </div>
+
+            <script type="text/babel">
+              // --- 1. MOCK DATA & ANOMALY STATES ---
+              const ZONES_DATA = {
+                low: {
+                  name: '低区机组 (Low Zone)', status: 'normal',
+                  data: {
+                    primSupT: { val: 85.2, unit: '℃' }, primSupP: { val: 1.25, unit: 'MPa' }, primSupF: { val: 150.4, unit: 't/h' },
+                    valvePrim: { val: 72, unit: '%' }, valveSec: { val: 88, unit: '%' },
+                    dirtDropP: { val: 0.05, unit: 'MPa' },
+                    hxPrimInP: { val: 1.20, unit: 'MPa' }, hxPrimOutP: { val: 0.95, unit: 'MPa' },
+                    primRetT: { val: 55.4, unit: '℃' }, primRetP: { val: 0.90, unit: 'MPa' }, primRetF: { val: 150.4, unit: 't/h' },
+                    secSupT: { val: 60.5, unit: '℃' }, secSupP: { val: 0.65, unit: 'MPa' }, secSupF: { val: 210.5, unit: 't/h' },
+                    hxSecOutP: { val: 0.65, unit: 'MPa' }, hxSecInP: { val: 0.75, unit: 'MPa' },
+                    pumpOutP: { val: 0.75, unit: 'MPa' }, pumpInP: { val: 0.50, unit: 'MPa' },
+                    secRetT: { val: 45.3, unit: '℃' }, secRetP: { val: 0.50, unit: 'MPa' }, secRetF: { val: 245.0, unit: 't/h' }
+                  }, anomalies: {}
+                },
+                mid: {
+                  name: '中区机组 (Middle Zone)', status: 'warning',
+                  data: {
+                    primSupT: { val: 95.0, unit: '℃' }, primSupP: { val: 1.45, unit: 'MPa' }, primSupF: { val: 180.2, unit: 't/h' },
+                    valvePrim: { val: 85, unit: '%' }, valveSec: { val: 92, unit: '%' },
+                    dirtDropP: { val: 0.35, unit: 'MPa' },
+                    hxPrimInP: { val: 1.10, unit: 'MPa' }, hxPrimOutP: { val: 0.85, unit: 'MPa' },
+                    primRetT: { val: 62.1, unit: '℃' }, primRetP: { val: 0.80, unit: 'MPa' }, primRetF: { val: 180.2, unit: 't/h' },
+                    secSupT: { val: 68.2, unit: '℃' }, secSupP: { val: 0.85, unit: 'MPa' }, secSupF: { val: 245.0, unit: 't/h' },
+                    hxSecOutP: { val: 0.85, unit: 'MPa' }, hxSecInP: { val: 0.95, unit: 'MPa' },
+                    pumpOutP: { val: 0.95, unit: 'MPa' }, pumpInP: { val: 0.50, unit: 'MPa' },
+                    secRetT: { val: 45.3, unit: '℃' }, secRetP: { val: 0.50, unit: 'MPa' }, secRetF: { val: 245.0, unit: 't/h' }
+                  }, anomalies: { dirtDropP: true }
+                },
+                high: {
+                  name: '高区机组 (High Zone)', status: 'error',
+                  data: {
+                    primSupT: { val: 110.5, unit: '℃' }, primSupP: { val: 1.85, unit: 'MPa' }, primSupF: { val: 210.6, unit: 't/h' },
+                    valvePrim: { val: 95, unit: '%' }, valveSec: { val: 78, unit: '%' },
+                    dirtDropP: { val: 0.08, unit: 'MPa' },
+                    hxPrimInP: { val: 1.77, unit: 'MPa' }, hxPrimOutP: { val: 1.45, unit: 'MPa' },
+                    primRetT: { val: 70.4, unit: '℃' }, primRetP: { val: 1.40, unit: 'MPa' }, primRetF: { val: 210.6, unit: 't/h' },
+                    secSupT: { val: 80.5, unit: '℃' }, secSupP: { val: 1.15, unit: 'MPa' }, secSupF: { val: 120.5, unit: 't/h' },
+                    hxSecOutP: { val: 1.15, unit: 'MPa' }, hxSecInP: { val: 1.25, unit: 'MPa' },
+                    pumpOutP: { val: 1.25, unit: 'MPa' }, pumpInP: { val: 0.12, unit: 'MPa' },
+                    secRetT: { val: 55.1, unit: '℃' }, secRetP: { val: 0.12, unit: 'MPa' }, secRetF: { val: 120.5, unit: 't/h' }
+                  }, anomalies: { pumpInP: true, pumpOutP: true, secRetP: true }
+                }
+              };
+
+              // --- 2. 主题检测函数 ---
+              const isLightMode = () => {
+                return document.body.classList.contains('light-mode');
+              };
+
+              // --- 3. 动态颜色函数 ---
+              const getThemeColor = (darkColor, lightColor) => {
+                return isLightMode() ? lightColor : darkColor;
+              };
+
+              // --- 4. ICONS ---
+              const AlertIcon = () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse-glow text-red-500">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              );
+
+              // --- 5. UI COMPONENTS ---
+              const LeaderLine = ({ x, y1, y2, isError }) => {
+                const color = isError ? '#ef4444' : 'rgba(6, 182, 212, 0.6)';
+                return (
+                  <g>
+                    <circle cx={x} cy={y1} r="3" fill={color} />
+                    {isError ? (
+                      <circle cx={x} cy={y1} r="4" fill="none" stroke="#ef4444" strokeWidth="1.5">
+                        <animate attributeName="r" values="4; 14; 4" dur="1.5s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="1; 0; 1" dur="1.5s" repeatCount="indefinite" />
+                      </circle>
+                    ) : (
+                      <circle cx={x} cy={y1} r="6" fill="none" stroke={color} strokeWidth="1" opacity="0.4" />
+                    )}
+                    <path d={`M ${x} ${y1} L ${x} ${y2}`} stroke={color} strokeWidth="1.5" strokeDasharray="3 3" opacity={isError ? 0.9 : 0.6} />
+                    <circle cx={x} cy={y2} r="2" fill={color} />
+                    <line x1={x - 10} y1={y2} x2={x + 10} y2={y2} stroke={color} strokeWidth="1.5" opacity="0.8" />
+                  </g>
+                );
+              };
+
+              const DataBadge = ({ label, dataObj, x, y, isError }) => {
+                if (!dataObj) return null;
+                return (
+                  <div
+                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 z-20 backdrop-blur-xl border rounded-[4px] px-2 py-1 flex flex-col shadow-[0_4px_12px_rgba(0,0,0,0.6)] transition-all duration-300 pointer-events-auto
+                            ${isError ? 'bg-red-950/90 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-[#0f172a]/95 border-scada-cyan/40 hover:border-scada-cyan'}`}
+                    style={{ left: `${x}%`, top: `${y}%`, minWidth: '76px' }}
+                  >
+                    <div className="flex justify-between items-center text-[9px] text-gray-400 font-semibold tracking-wider leading-none mb-0.5">
+                      {label}
+                      {isError && <AlertIcon />}
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className={`text-[14px] font-mono font-bold leading-none ${isError ? 'text-red-400' : 'text-scada-cyan drop-shadow-md'}`}>{dataObj.val.toFixed(2)}</span>
+                      <span className="text-[8px] text-gray-500 font-bold leading-none">{dataObj.unit}</span>
+                    </div>
+                  </div>
+                );
+              };
+
+              const NetworkBadge = ({ title, data, positionClass, isError }) => {
+                return (
+                  <div
+                    className={`absolute ${positionClass} z-20 backdrop-blur-md border rounded px-1.5 py-1 flex flex-col gap-0.5 shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-auto
+                            ${isError ? 'bg-red-950/90 border-red-500/60' : 'bg-[#0a0f1c]/90 border-[#3b82f6]/30'}`}
+                    style={{ minWidth: '72px' }}
+                  >
+                    <div className="flex items-center gap-1 border-b border-gray-700/50 pb-0.5">
+                      <span className="text-[8px] text-gray-300 font-semibold tracking-wide">{title}</span>
+                      {isError && <AlertIcon />}
+                    </div>
+                    {data.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-baseline gap-2">
+                        <span className="text-[7px] text-gray-500">{item.label}</span>
+                        <span className={`text-[12px] font-mono font-bold ${isError ? 'text-red-400' : 'text-scada-cyan drop-shadow-md'}`}>{item.val.val.toFixed(2)}{item.val.unit}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              };
+
+              // --- 4. MAIN SCADA DASHBOARD ---
+              const Dashboard = () => {
+                const [activeZone, setActiveZone] = React.useState('low');
+                const current = ZONES_DATA[activeZone];
+                const d = current.data;
+                const a = current.anomalies;
+
+                return (
+                  <div className="w-full h-full p-2 flex flex-col items-center select-none overflow-hidden">
+
+                    <header className="w-full max-w-[1600px] flex justify-center items-center mb-0 z-10">
+                      <div className="inline-flex rounded-lg overflow-hidden border border-[#1e293b] bg-[#0f172a]/60 backdrop-blur-sm shadow-[0_2px_12px_rgba(0,0,0,0.4)]" role="group" aria-label="分段控制器">
+                        {Object.entries(ZONES_DATA).map(([key, zone], index) => (
+                          <button
+                            key={key}
+                            onClick={() => setActiveZone(key)}
+                            className={`relative inline-flex items-center justify-center gap-1.5 px-8 py-0 text-[11px] font-mono font-semibold tracking-widest transition-all duration-200 border-r border-[#1e293b] last:border-r-0 min-w-[100px]
+                            ${activeZone === key
+                                ? 'bg-[#06b6d4]/25 text-[#06b6d4] shadow-[inset_0_0_0_1px_rgba(6,182,212,0.4)]'
+                                : 'text-gray-400 hover:text-gray-200 hover:bg-[#1e293b]/40'}`}
+                          >
+                            {zone.status === 'error' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 animate-pulse shadow-[0_0_4px_#ef4444]" title="异常"></span>
+                            )}
+                            {zone.status === 'warning' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0 animate-pulse shadow-[0_0_4px_#f97316]" title="预警"></span>
+                            )}
+                            {zone.status === 'normal' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 shadow-[0_0_4px_#10b981]" title="正常"></span>
+                            )}
+                            <span>{zone.name.split(' ')[0]}</span>
+                            {activeZone === key && (
+                              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#06b6d4] rounded-full"></div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </header>
+
+                    <main className="w-full flex-1 relative mt-2 bg-gradient-to-br from-[#020617] to-[#060b14] rounded-2xl border border-scada-border shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden scada-grid flex-shrink-0">
+
+                      {/* 1. 四个角落的大型管网面板 */}
+                      <NetworkBadge positionClass="top-5 left-5" title="一次供水管网"
+                        data={[{ label: '供水温', val: d.primSupT }, { label: '进站压', val: d.primSupP }, { label: '瞬时流', val: d.primSupF }]}
+                        isError={a.primSupP || a.primSupT} />
+                      <NetworkBadge positionClass="bottom-5 left-5" title="一次回水管网"
+                        data={[{ label: '回水温', val: d.primRetT }, { label: '出站压', val: d.primRetP }, { label: '瞬时流', val: d.primRetF }]}
+                        isError={a.primRetP || a.primRetT} />
+                      <NetworkBadge positionClass="top-5 right-5" title="二次供水管网"
+                        data={[{ label: '供水温', val: d.secSupT }, { label: '出站压', val: d.secSupP }, { label: '瞬时流', val: d.secSupF }]}
+                        isError={a.secSupP || a.secSupT} />
+                      <NetworkBadge positionClass="bottom-5 right-5" title="二次回水管网"
+                        data={[{ label: '回水温', val: d.secRetT }, { label: '进站压', val: d.secRetP }, { label: '瞬时流', val: d.secRetF }]}
+                        isError={a.secRetP || a.secRetT} />
+
+                      {/* 2. SVG 物理骨架与连线系统 (去除了缩放偏移，100%全屏居中) */}
+                      <svg viewBox="0 0 1200 600" className="absolute inset-0 w-full h-full z-0" preserveAspectRatio="xMidYMid meet">
+                        <g>
+                          <defs>
+                            {/* 发光滤镜增强 */}
+                            <filter id="glow-hot" x="-20%" y="-20%" width="140%" height="140%">
+                              <feGaussianBlur stdDeviation="5" result="blur" />
+                              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                            <filter id="glow-cold" x="-20%" y="-20%" width="140%" height="140%">
+                              <feGaussianBlur stdDeviation="5" result="blur" />
+                              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                            <linearGradient id="hx-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#0f172a" />
+                              <stop offset="100%" stopColor="#020617" />
+                            </linearGradient>
+
+                            {/* 高亮水流渐变：一次供水(红) */}
+                            <linearGradient id="flow-prim-sup" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="350" y2="0" spreadMethod="repeat">
+                              <stop offset="0%" stopColor="rgba(239,68,68,0)" />
+                              <stop offset="15%" stopColor="rgba(239,68,68,0.9)" />
+                              <stop offset="50%" stopColor="#fee2e2" /> {/* 极亮红色 */}
+                              <stop offset="85%" stopColor="rgba(239,68,68,0.9)" />
+                              <stop offset="100%" stopColor="rgba(239,68,68,0)" />
+                              <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="350 0" dur="1.2s" repeatCount="indefinite" />
+                            </linearGradient>
+
+                            {/* 高亮水流渐变：一次回水(紫) */}
+                            <linearGradient id="flow-prim-ret" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="350" y2="0" spreadMethod="repeat">
+                              <stop offset="0%" stopColor="rgba(139,92,246,0)" />
+                              <stop offset="15%" stopColor="rgba(139,92,246,0.9)" />
+                              <stop offset="50%" stopColor="#f3e8ff" /> {/* 极亮紫色 */}
+                              <stop offset="85%" stopColor="rgba(139,92,246,0.9)" />
+                              <stop offset="100%" stopColor="rgba(139,92,246,0)" />
+                              <animateTransform attributeName="gradientTransform" type="translate" from="350 0" to="0 0" dur="1.8s" repeatCount="indefinite" />
+                            </linearGradient>
+
+                            {/* 高亮水流渐变：二次供水(橙) */}
+                            <linearGradient id="flow-sec-sup" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="350" y2="0" spreadMethod="repeat">
+                              <stop offset="0%" stopColor="rgba(249,115,22,0)" />
+                              <stop offset="15%" stopColor="rgba(249,115,22,0.9)" />
+                              <stop offset="50%" stopColor="#ffedd5" /> {/* 极亮橙色 */}
+                              <stop offset="85%" stopColor="rgba(249,115,22,0.9)" />
+                              <stop offset="100%" stopColor="rgba(249,115,22,0)" />
+                              <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="350 0" dur="1.2s" repeatCount="indefinite" />
+                            </linearGradient>
+
+                            {/* 高亮水流渐变：二次回水(青) */}
+                            <linearGradient id="flow-sec-ret" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="350" y2="0" spreadMethod="repeat">
+                              <stop offset="0%" stopColor="rgba(6,182,212,0)" />
+                              <stop offset="15%" stopColor="rgba(6,182,212,0.9)" />
+                              <stop offset="50%" stopColor="#cffafe" /> {/* 极亮青色 */}
+                              <stop offset="85%" stopColor="rgba(6,182,212,0.9)" />
+                              <stop offset="100%" stopColor="rgba(6,182,212,0)" />
+                              <animateTransform attributeName="gradientTransform" type="translate" from="350 0" to="0 0" dur="1.8s" repeatCount="indefinite" />
+                            </linearGradient>
+                          </defs>
+
+                          <g>
+                            {/* 发光主管道层 (加粗流动层) */}
+                            <g>
+                              {/* 一次供水 (红) - 向右流 */}
+                              <path d="M 100 220 L 530 220" stroke="#ef4444" strokeWidth="28" fill="none" opacity="0.35" filter="url(#glow-hot)" />
+                              <path d="M 100 220 L 530 220" stroke="#ef4444" strokeWidth="14" fill="none" />
+                              <path d="M 100 220 L 530 220" stroke="url(#flow-prim-sup)" strokeWidth="10" fill="none" />
+
+                              {/* 一次回水 (紫) - 向左流 */}
+                              <path d="M 530 380 L 100 380" stroke="#8b5cf6" strokeWidth="28" fill="none" opacity="0.35" filter="url(#glow-cold)" />
+                              <path d="M 530 380 L 100 380" stroke="#8b5cf6" strokeWidth="14" fill="none" />
+                              <path d="M 530 380 L 100 380" stroke="url(#flow-prim-ret)" strokeWidth="10" fill="none" />
+
+                              {/* 二次供水 (橙) - 向右流 */}
+                              <path d="M 670 220 L 1100 220" stroke="#f97316" strokeWidth="28" fill="none" opacity="0.35" filter="url(#glow-hot)" />
+                              <path d="M 670 220 L 1100 220" stroke="#f97316" strokeWidth="14" fill="none" />
+                              <path d="M 670 220 L 1100 220" stroke="url(#flow-sec-sup)" strokeWidth="10" fill="none" />
+
+                              {/* 二次回水 (青) - 向左流 */}
+                              <path d="M 1100 380 L 670 380" stroke="#06b6d4" strokeWidth="28" fill="none" opacity="0.35" filter="url(#glow-cold)" />
+                              <path d="M 1100 380 L 670 380" stroke="#06b6d4" strokeWidth="14" fill="none" />
+                              <path d="M 1100 380 L 670 380" stroke="url(#flow-sec-ret)" strokeWidth="10" fill="none" />
+                            </g>
+                            {/* 物理设备层 (放大并居中) */}
+                            <g>
+                              {/* 除污器 Center X=300 */}
+                              <rect x="275" y="195" width="50" height="50" rx="8" fill="#0a0f1c" stroke={a.dirtDropP ? "#ef4444" : "#f97316"} strokeWidth="3" filter={a.dirtDropP ? "url(#glow-hot)" : ""} />
+                              <line x1="285" y1="235" x2="315" y2="205" stroke={a.dirtDropP ? "#ef4444" : "#f97316"} strokeWidth="3" strokeDasharray="4 3" />
+                              <text x="300" y="265" textAnchor="middle" fontSize="13" fill="#9ca3af" fontWeight="bold">除污器</text>
+
+                              {/* 板式换热器 Center X=600, Y=300 (大幅放大) */}
+                              <rect x="530" y="150" width="140" height="300" rx="12" fill="url(#hx-grad)" stroke="#3b82f6" strokeWidth="3" filter="url(#glow-cold)" />
+                              {[...Array(11)].map((_, i) => (
+                                <line key={i} x1="545" y1={175 + i * 25} x2="655" y2={175 + i * 25} stroke="#1e3a8a" strokeWidth="2" opacity="0.6" />
+                              ))}
+                              <text x="600" y="290" textAnchor="middle" fontSize="20" fill="#ffffff" fontWeight="bold" className="tracking-widest">板式</text>
+                              <text x="600" y="325" textAnchor="middle" fontSize="20" fill="#ffffff" fontWeight="bold" className="tracking-widest">换热</text>
+
+                              {/* 循环泵 Center X=980 (向右平移，放在进出口指示线之间) */}
+                              <g transform="translate(980, 380)">
+                                <circle r="34" fill="#0a0f1c" stroke={a.pumpInP || a.pumpOutP ? "#ef4444" : "#06b6d4"} strokeWidth="4" filter={a.pumpInP || a.pumpOutP ? "url(#glow-hot)" : "url(#glow-cold)"} />
+                                <g className="pump-impeller">
+                                  <ellipse cx="0" cy="-16" rx="5" ry="14" fill={a.pumpInP || a.pumpOutP ? "#ef4444" : "#06b6d4"} />
+                                  <ellipse cx="0" cy="-16" rx="5" ry="14" fill={a.pumpInP || a.pumpOutP ? "#ef4444" : "#06b6d4"} transform="rotate(90)" />
+                                  <ellipse cx="0" cy="-16" rx="5" ry="14" fill={a.pumpInP || a.pumpOutP ? "#ef4444" : "#06b6d4"} transform="rotate(180)" />
+                                  <ellipse cx="0" cy="-16" rx="5" ry="14" fill={a.pumpInP || a.pumpOutP ? "#ef4444" : "#06b6d4"} transform="rotate(270)" />
+                                  <circle r="8" fill="#0a0f1c" stroke={a.pumpInP || a.pumpOutP ? "#ef4444" : "#06b6d4"} strokeWidth="2" />
+                                </g>
+                              </g>
+                              <text x="980" y="440" textAnchor="middle" fontSize="13" fill="#9ca3af" fontWeight="bold">1# 循环泵</text>
+                            </g>
+
+                            {/* 细线牵引指示线 (精确匹配底层数据标签位置) */}
+                            {/* 顶部指示线向上 */}
+                            <LeaderLine x={300} y1={220} y2={135} isError={a.dirtDropP} />
+                            <LeaderLine x={456} y1={220} y2={135} isError={a.hxPrimInP} />
+                            <LeaderLine x={744} y1={220} y2={135} isError={a.hxSecOutP} />
+
+                            {/* 底部指示线向下 */}
+                            <LeaderLine x={456} y1={380} y2={465} isError={a.hxPrimOutP} />
+                            <LeaderLine x={744} y1={380} y2={465} isError={a.hxSecInP} />
+                            <LeaderLine x={900} y1={380} y2={465} isError={a.pumpOutP} />
+                            <LeaderLine x={1056} y1={380} y2={465} isError={a.pumpInP} />
+                          </g>
+                        </g>
+                      </svg>
+
+                      {/* 3. 数据小标签层 */}
+                      <div className="absolute inset-0 z-20 pointer-events-none">
+                        {/* 上排标签 (Y由16%调整为19%) */}
+                        <DataBadge label="除污器压差" dataObj={d.dirtDropP} x={25} y={25} isError={a.dirtDropP} />
+                        <DataBadge label="一网进站压" dataObj={d.hxPrimInP} x={38} y={25} isError={a.hxPrimInP} />
+                        <DataBadge label="二网出站压" dataObj={d.hxSecOutP} x={62} y={25} isError={a.hxSecOutP} />
+
+                        {/* 下排标签 (Y由84%调整为81%) */}
+                        <DataBadge label="一网出站压" dataObj={d.hxPrimOutP} x={38} y={74} isError={a.hxPrimOutP} />
+                        <DataBadge label="板换进口压" dataObj={d.hxSecInP} x={62} y={74} isError={a.hxSecInP} />
+                        <DataBadge label="泵出口压力" dataObj={d.pumpOutP} x={75} y={74} isError={a.pumpOutP} />
+                        <DataBadge label="泵进口压力" dataObj={d.pumpInP} x={88} y={74} isError={a.pumpInP} />
+                      </div>
+
+                    </main>
+
+                    <footer className="w-full max-w-[1600px] mt-3 flex justify-end gap-6 text-[11px] font-bold tracking-widest text-gray-500">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-scada-cyan shadow-[0_0_8px_#06b6d4]"></span> 数据正常
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse"></span> 告警拦截
+                      </div>
+                    </footer>
+
+                  </div>
+                );
+              };
+
+              // 等待DOM加载完成后初始化React应用
+              setTimeout(() => {
+                const container = document.getElementById('scada-react-root');
+                if (container) {
+                  const root = ReactDOM.createRoot(container);
+                  root.render(<Dashboard />);
+                }
+              }, 100);
             </script>
           </div>
 
@@ -2204,21 +3656,194 @@
     // 统一初始化入口
     function initApp() {
       handleResize();
-      if (typeof initAllCharts === 'function') initAllCharts();
-      initSmartDashboard();
-      if (typeof initEnergyPage === 'function') initEnergyPage();
-      if (typeof initTaskLists === 'function') initTaskLists();
-      setInterval(updateClock, 1000);
-      updateClock();
+      // 立即显示基础界面
+      console.log("基础界面已加载");
+
+      // 延迟初始化图表功能，确保DOM完全加载
+      setTimeout(() => {
+        if (typeof initAllCharts === 'function') initAllCharts();
+        initSmartDashboard();
+        if (typeof initEnergyPage === 'function') initEnergyPage();
+        if (typeof initTaskLists === 'function') initTaskLists();
+        setInterval(updateClock, 1000);
+        updateClock();
+        console.log("图表功能已完全加载");
+      }, 200);
+    }
+
+    function syncProcessScreenSlots() {
+      const map = [
+        ['slot-hot-in', 'screen-hot-in'],
+        ['slot-cold-out', 'screen-cold-out'],
+        ['slot-hot-in-r', 'screen-hot-in-r'],
+        ['slot-cold-out-r', 'screen-cold-out-r'],
+        ['slot-flow', 'screen-flow'],
+      ];
+
+      const updateOnce = () => {
+        map.forEach(([slotId, screenId]) => {
+          const slot = document.getElementById(slotId);
+          const screen = document.getElementById(screenId);
+          if (!slot || !screen) return;
+
+          const txt = (slot.textContent || '').trim();
+          if (!txt) return;
+
+          const m = txt.match(/(-?[0-9]+(?:\.[0-9]+)?)\s*([a-zA-Z°³/]+)?/);
+          if (m) {
+            const val = m[1];
+            const unit = m[2] || '';
+            if (screen instanceof SVGElement) {
+              const tspan = screen.querySelector('tspan');
+              if (tspan) {
+                screen.firstChild && (screen.firstChild.nodeType === 3) ? (screen.firstChild.textContent = val) : null;
+                if (!screen.firstChild || screen.firstChild.nodeType !== 3) {
+                  screen.textContent = val;
+                }
+                tspan.textContent = unit;
+              } else {
+                screen.textContent = `${val}${unit}`;
+              }
+            } else {
+              screen.innerHTML = `${val}<span class="u">${unit}</span>`;
+            }
+          } else {
+            screen.textContent = txt;
+          }
+        });
+      };
+
+      updateOnce();
+
+      const targets = map.map(([slotId]) => document.getElementById(slotId)).filter(Boolean);
+      if (targets.length) {
+        const obs = new MutationObserver(() => updateOnce());
+        targets.forEach(t => obs.observe(t, { characterData: true, childList: true, subtree: true }));
+      } else {
+        let tries = 0;
+        const timer = setInterval(() => {
+          tries += 1;
+          updateOnce();
+          const ok = map.every(([slotId]) => document.getElementById(slotId));
+          if (ok || tries > 80) clearInterval(timer);
+        }, 250);
+      }
     }
 
     // 唯一启动监听
     window.addEventListener('load', initApp);
+    window.addEventListener('load', syncProcessScreenSlots);
     window.addEventListener('resize', () => {
       handleResize();
       if (typeof charts !== 'undefined') {
         Object.values(charts).forEach(c => c && c.resize());
       }
+    });
+
+    // 导航切换函数 (与其他页面保持一致)
+    function switchNav(el) {
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(item => item.classList.remove('active'));
+      el.classList.add('active');
+      console.log("已切换至: " + el.querySelector('.nav-label').innerText);
+    }
+
+    // 全局缩放适配函数 (与其他页面保持一致)
+    function handleResize() {
+      const designWidth = 1920;
+      const designHeight = 1080;
+      const clientWidth = document.documentElement.clientWidth;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+      const app = document.getElementById('app');
+      if (app) {
+        app.style.transform = `scale(${scale})`;
+        const left = (clientWidth - designWidth * scale) / 2;
+        const top = (clientHeight - designHeight * scale) / 2;
+        app.style.left = `${left}px`;
+        app.style.top = `${top}px`;
+      }
+    }
+
+    // 页面跳转前重置缩放状态
+    window.addEventListener('beforeunload', () => {
+      document.body.style.opacity = '0';
+    });
+
+    // 页面加载完成后立即应用缩放
+    document.addEventListener('DOMContentLoaded', () => {
+      handleResize();
+      // 页面加载完成后淡入
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+      }, 50);
+    });
+  </script>
+
+  <!-- Canvas粒子动画 -->
+  <script>
+    class ParticleSystem {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.resize();
+        this.init();
+        this.animate();
+
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = this.canvas.offsetWidth;
+        this.canvas.height = this.canvas.offsetHeight;
+      }
+
+      init() {
+        for (let i = 0; i < 50; i++) {
+          this.particles.push({
+            x: Math.random() * this.canvas.width,
+            y: Math.random() * this.canvas.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            size: Math.random() * 2 + 0.5,
+            opacity: Math.random() * 0.5 + 0.2
+          });
+        }
+      }
+
+      animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.particles.forEach(particle => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+
+          if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+          if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+
+          this.ctx.beginPath();
+          this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+          this.ctx.fillStyle = `rgba(0, 242, 255, ${particle.opacity})`;
+          this.ctx.fill();
+
+          // 添加发光效果
+          this.ctx.shadowBlur = 10;
+          this.ctx.shadowColor = '#00f2ff';
+          this.ctx.fill();
+          this.ctx.shadowBlur = 0;
+        });
+
+        requestAnimationFrame(() => this.animate());
+      }
+    }
+
+    // 初始化粒子系统
+    window.addEventListener('load', () => {
+      new ParticleSystem('particleCanvas');
     });
   </script>
 </body>

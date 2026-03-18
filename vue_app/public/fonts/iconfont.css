@@ -1,0 +1,75 @@
+@font-face {
+  font-family: 'iconfont'; /* Project id 5115287 */
+  src:
+    url('iconfont.woff2') format('woff2'),
+    url('iconfont.woff') format('woff'),
+    url('iconfont.ttf') format('truetype');
+}
+
+.iconfont {
+  font-family: 'iconfont' !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-famen:before {
+  content: '\e67d';
+}
+
+.icon-celiufa:before {
+  content: '\e610';
+}
+
+.icon-yali:before {
+  content: '\e632';
+}
+
+.icon-wendu:before {
+  content: '\e89e';
+}
+
+.icon-date:before {
+  content: '\eb9b';
+}
+
+.icon-tianqi:before {
+  content: '\e87f';
+}
+
+.icon-jiankong:before {
+  content: '\e623';
+}
+
+.icon-setting:before {
+  content: '\e602';
+}
+
+.icon-gaojingshitu:before {
+  content: '\e60b';
+}
+
+.icon-nenghaofenxi:before {
+  content: '\e948';
+}
+
+.icon-xunzhan:before {
+  content: '\e65c';
+}
+
+.icon-jiankongfenxi:before {
+  content: '\e61f';
+}
+
+.icon-huanrezhan:before {
+  content: '\e84a';
+}
+
+.icon-qizhan:before {
+  content: '\e6db';
+}
+
+.icon-zichanpandian:before {
+  content: '\e668';
+}

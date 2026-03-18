@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>一键巡站 - 智慧换热站</title>
+  <script src="libs/vue.global.js"></script>
+  <link rel="stylesheet" href="fonts/iconfont.css">
+  <!-- 主题配置 -->
+  <script src="theme-config.js"></script>
+
+
+  <style>
+    /* 在线链接服务仅供平台体验和调试使用，平台不承诺服务的稳定性，企业客户需下载字体包自行发布使用并做好备份。 */
+
+    /* --- 1. 全局样式 (保持统一) --- */
+    :root {
+      --bg-color: #0f1a2b;
+      --panel-bg: rgba(16, 42, 67, 0.85);
+      /* 稍微加深背景，突出中间内容 */
+      --border-color: rgba(79, 172, 254, 0.3);
+      --text-primary: #ffffff;
+      --text-secondary: #b8cbe3;
+      --accent-blue: #4facfe;
+      --accent-cyan: #00f2fe;
+      --accent-red: #ff3300;
+      --accent-green: #00e676;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .dashboard-root {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: left top;
+      display: flex;
+      background-color: #0c1626
+    }
+
+    /* --- 2. 侧边导航栏 --- */
+    .side-nav {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 110px;
+      height: 100%;
+      background: #081221;
+      border-right: 1px solid var(--accent-blue);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding-top: 60px;
+      transform: none !important;
+    }
+
+    .nav-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 15px 0;
+      position: relative;
+      transition: all 0.3s ease;
+      color: oklch(1 0 0 / 0.6);
+    }
+
+    .nav-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      writing-mode: horizontal-tb !important;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      letter-spacing: 1px;
+      opacity: 1 !important;
+      display: block;
+    }
+
+    /* 导航交互状态 */
+    .nav-item:hover,
+    .nav-item.active {
+      background: oklch(0.6 0.15 200 / 0.15);
+      color: #4facfe;
+    }
+
+    .nav-item.active .nav-label {
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.1);
+    }
+
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #4facfe;
+      box-shadow: 0 0 10px #4facfe;
+    }
+
+    /* --- 3. 主内容区域 --- */
+    .main-container {
+      flex: 1;
+      margin-left: 110px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 15px;
+    }
+
+    /* --- 4. 顶部栏 --- */
+    .top-header {
+      height: 80px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 30px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .page-time {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    /* --- 5. 内容网格 --- */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .glass-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 顶部标题栏 */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 30px;
+      position: relative;
+    }
+
+    .page-title {
+      font-size: 36px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color: #fff;
+      text-shadow: 0 0 15px var(--accent-blue);
+    }
+
+    .page-time {
+      font-size: 20px;
+      color: var(--accent-cyan);
+      font-family: 'Consolas', monospace;
+    }
+
+    /* 核心布局：左统计 - 中摄像 - 右操作 */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr 350px;
+      gap: 30px;
+      height: 100%;
+    }
+
+    /* 通用面板样式 */
+    .glass-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 左侧：统计数据 */
+    .stat-box {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 4px solid var(--accent-blue);
+      border-radius: 4px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .stat-unit {
+      font-size: 14px;
+      margin-left: 5px;
+      color: #aaa;
+    }
+
+    .stat-box.highlight {
+      border-left-color: var(--accent-green);
+      animation: pulse 1s;
+    }
+
+    .stat-box.highlight .stat-value {
+      color: var(--accent-green);
+    }
+
+    /* 中间：摄像头区域 */
+    .camera-container {
+      flex: 1;
+      position: relative;
+      background: #000;
+      border: 2px solid var(--accent-blue);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 模拟摄像头画面背景 */
+    .camera-feed {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml;utf8,<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="%23050a10"/><circle cx="400" cy="250" r="100" fill="%231a2a3a" opacity="0.5"/><path d="M350,400 Q400,450 450,400" stroke="%231a2a3a" stroke-width="5" fill="none"/></svg>') center/cover;
+      opacity: 0.6;
+    }
+
+    /* 人脸识别框 */
+    .face-frame {
+      width: 300px;
+      height: 300px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      z-index: 10;
+      transition: all 0.3s;
+    }
+
+    /* 四角装饰 */
+    .face-frame::before,
+    .face-frame::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--accent-cyan);
+      border-style: solid;
+      transition: all 0.3s;
+    }
+
+    .face-frame::before {
+      top: -2px;
+      left: -2px;
+      border-width: 4px 0 0 4px;
+    }
+
+    .face-frame::after {
+      bottom: -2px;
+      right: -2px;
+      border-width: 0 4px 4px 0;
+    }
+
+    /* 扫描状态 */
+    .face-frame.scanning {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px var(--accent-cyan);
+    }
+
+    .face-frame.scanning::before {
+      width: 100%;
+      height: 100%;
+      border-width: 2px;
+      border-radius: 4px;
+    }
+
+    .face-frame.success {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 30px var(--accent-green);
+    }
+
+    .face-frame.success::before,
+    .face-frame.success::after {
+      border-color: var(--accent-green);
+    }
+
+    /* 扫描线动画 */
+    .scan-laser {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+      opacity: 0;
+    }
+
+    .face-frame.scanning .scan-laser {
+      opacity: 1;
+      animation: scanDown 1.5s linear infinite;
+    }
+
+    /* 状态提示文字 */
+    .camera-status {
+      margin-top: 20px;
+      z-index: 10;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 8px 20px;
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+    }
+
+    .status-text.blink {
+      animation: blink 1s infinite;
+      color: var(--accent-cyan);
+    }
+
+    .status-text.success {
+      color: var(--accent-green);
+    }
+
+    /* 右侧：身份选择 */
+    .role-section {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      flex: 1;
+    }
+
+    .role-btn {
+      flex: 1;
+      background: linear-gradient(90deg, rgba(30, 60, 94, 0.5), rgba(10, 21, 36, 0.5));
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-btn:hover {
+      border-color: var(--accent-blue);
+      background: rgba(79, 172, 254, 0.1);
+    }
+
+    .role-btn.selected {
+      background: var(--accent-blue);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 20px var(--accent-blue);
+      border: none;
+    }
+
+    .role-btn.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+
+    .check-icon {
+      display: none;
+      font-size: 20px;
+    }
+
+    .role-btn.selected .check-icon {
+      display: block;
+    }
+
+    /* 底部日志 */
+    .log-panel {
+      height: 200px;
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .log-entry {
+      margin-bottom: 5px;
+      color: var(--text-secondary);
+    }
+
+    .log-entry.success {
+      color: var(--accent-green);
+    }
+
+    /* 成功弹窗遮罩 */
+    .success-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.3s;
+    }
+
+    .success-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      width: 500px;
+      background: #0f1a2b;
+      border: 2px solid var(--accent-green);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(0, 230, 118, 0.3);
+      transform: scale(0.8);
+      transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .success-modal.show .modal-content {
+      transform: scale(1);
+    }
+
+    /* 动画 */
+    @keyframes scanDown {
+      0% {
+        top: 0;
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      80% {
+        opacity: 1;
+      }
+
+      100% {
+        top: 100%;
+        opacity: 0;
+      }
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px var(--accent-green);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+  
+    /* 白天模式样式 */
+    .light-mode {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    
+
+    /* 白天模式样式支持 */
+    body.light-mode {
+      --bg-color: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --border-color: rgba(37, 99, 235, 0.3);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    body.light-mode .dashboard-root {
+      background-color: #f8fafc;
+    }
+
+    body.light-mode .side-nav {
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    
+    body.light-mode .nav-item {
+      color: #64748b;
+    }
+    
+    body.light-mode .nav-item:hover,
+    body.light-mode .nav-item.active {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+    }
+    
+    body.light-mode .nav-item .iconfont {
+      color: #94a3b8;
+    }
+    
+    body.light-mode .nav-item:hover .iconfont,
+    body.light-mode .nav-item.active .iconfont {
+      color: #2563eb;
+    }
+
+    body.light-mode .nav-item.active .nav-label {
+      color: #2563eb !important;
+      font-weight: bold;
+    }
+
+    body.light-mode .nav-item.active::after {
+      background: #2563eb;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    }
+
+    body.light-mode .glass-panel,
+    body.light-mode .top-header,
+    body.light-mode .camera-card,
+    body.light-mode .log-panel {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(37, 99, 235, 0.2);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    body.light-mode .page-title {
+      color: #1e40af;
+      text-shadow: none;
+    }
+
+    body.light-mode .panel-title {
+      color: #1e40af;
+    }
+
+    body.light-mode .log-item {
+      border-bottom-color: rgba(37, 99, 235, 0.1);
+    }
+
+    body.light-mode .log-text {
+      color: #1e293b;
+    }
+
+    body.light-mode .camera-placeholder {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+
+    
+  </style>
+</head>
+
+<body>
+  <!-- 主题切换按钮 -->
+  <div id="app" class="dashboard-root">
+    <aside class="side-nav">
+      <div class="nav-wrapper">
+        <div class="nav-item" onclick="window.location.href='home.html'">
+          <i class="iconfont nav-icon">&#xe603;</i>
+          <div class="nav-label">首页</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='smart_heating_station_terminal.html'">
+          <i class="iconfont nav-icon">&#xe84a;</i>
+          <div class="nav-label">我的换热站</div>
+        </div>
+        <div class="nav-item active" onclick="window.location.href='station_patrol.html'">
+          <i class="iconfont nav-icon">&#xe65c;</i>
+          <div class="nav-label">一键巡站</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='station_startup.html'">
+          <i class="iconfont nav-icon">&#xe6db;</i>
+          <div class="nav-label">一键启停</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='health_monitor.html'">
+          <i class="iconfont nav-icon">&#xe61f;</i>
+          <div class="nav-label">健康监测</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='asset_inventory.html'">
+          <i class="iconfont nav-icon">&#xe668;</i>
+          <div class="nav-label">资产盘点</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='system_settings.html'">
+          <i class="iconfont nav-icon">&#xe602;</i>
+          <div class="nav-label">系统设置</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-container">
+      <header class="top-header">
+        <div>
+          <div class="page-title">一键巡站系统</div>
+          <div style="font-size: 14px; color: var(--text-secondary); margin-top: 5px;">SMART PATROL TERMINAL</div>
+        </div>
+        <div class="page-time">{{ currentTime }}</div>
+      </header>
+
+      <div class="content-grid">
+
+        <div class="glass-panel">
+          <h3
+            style="color: var(--accent-blue); margin-bottom: 20px; border-left: 4px solid var(--accent-blue); padding-left: 10px;">
+            巡视统计数据</h3>
+
+          <div class="stat-box" :class="{ highlight: justUpdated }">
+            <div class="stat-label">本月巡视总次数</div>
+            <div>
+              <span class="stat-value">{{ stats.month }}</span><span class="stat-unit">次</span>
+            </div>
+          </div>
+
+          <div class="stat-box" :class="{ highlight: justUpdated }">
+            <div class="stat-label">今年累计巡视</div>
+            <div>
+              <span class="stat-value">{{ stats.year }}</span><span class="stat-unit">次</span>
+            </div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">上次打卡人员</div>
+            <div style="font-size: 18px; color: #fff; margin-top: 5px;">
+              {{ lastUser }} <span style="font-size: 12px; color: var(--text-secondary);">({{ lastRole }})</span>
+            </div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">{{ lastTime }}</div>
+          </div>
+        </div>
+
+        <div class="camera-container">
+          <div class="camera-feed"></div>
+          <div class="face-frame" :class="scanState">
+            <div class="scan-laser"></div>
+          </div>
+
+          <div class="camera-status">
+            <span v-if="scanState === 'idle'" style="color: #aaa;">请正对摄像头...</span>
+            <span v-if="scanState === 'scanning'" class="status-text blink">正在识别身份特征...</span>
+            <span v-if="scanState === 'success'" class="status-text success">✔ 识别成功：{{ currentUser }}</span>
+          </div>
+        </div>
+
+        <div class="glass-panel">
+          <h3
+            style="color: var(--accent-blue); margin-bottom: 20px; border-left: 4px solid var(--accent-blue); padding-left: 10px;">
+            请确认巡视职能</h3>
+
+          <div class="role-section">
+            <div class="role-btn" :class="{ selected: selectedRole === '管家', disabled: scanState !== 'success' }"
+              @click="selectRole('管家')">
+              <span class="check-icon">✔</span> 管家
+            </div>
+            <div class="role-btn" :class="{ selected: selectedRole === '热力队伍', disabled: scanState !== 'success' }"
+              @click="selectRole('热力队伍')">
+              <span class="check-icon">✔</span> 热力队伍
+            </div>
+            <div class="role-btn" :class="{ selected: selectedRole === '电气队伍', disabled: scanState !== 'success' }"
+              @click="selectRole('电气队伍')">
+              <span class="check-icon">✔</span> 电气队伍
+            </div>
+          </div>
+
+          <div class="log-panel" id="logPanel">
+            <div v-for="(log, idx) in logs" :key="idx" class="log-entry" :class="{ success: log.type === 'success' }">
+              [{{ log.time }}] {{ log.msg }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <div class="success-modal" :class="{ show: showSuccessModal }">
+      <div class="modal-content">
+        <div style="font-size: 80px; color: var(--accent-green); margin-bottom: 20px;">✔</div>
+        <h2 style="color: #fff; margin-bottom: 10px;">打卡成功</h2>
+        <p style="color: var(--text-secondary); font-size: 18px;">{{ currentUser }} ({{ selectedRole }})</p>
+        <p style="color: var(--accent-cyan); margin-top: 20px; font-family: monospace;">{{ currentTime }}</p>
+        <button @click="closeModal"
+          style="margin-top: 30px; padding: 10px 40px; background: var(--accent-blue); border: none; border-radius: 20px; color: #fff; font-size: 16px; cursor: pointer;">返回</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const currentTime = ref('');
+        const scanState = ref('idle'); // idle, scanning, success
+        const currentUser = ref('');
+        const selectedRole = ref('');
+        const showSuccessModal = ref(false);
+        const justUpdated = ref(false);
+
+        // 模拟统计数据
+        const stats = reactive({
+          month: 12,
+          year: 45
+        });
+
+        const lastUser = ref('张工');
+        const lastRole = ref('热力队伍');
+        const lastTime = ref('今日 08:30');
+
+        const logs = reactive([]);
+
+        // 添加日志
+        const addLog = (msg, type = 'info') => {
+          const time = new Date().toLocaleTimeString();
+          logs.unshift({ time, msg, type }); // 最新日志在最上
+        };
+
+        // 1. 初始化：进入页面自动开始扫描
+        const startProcess = () => {
+          addLog("摄像头已激活，等待人脸...");
+          // 模拟延迟
+          setTimeout(() => {
+            scanState.value = 'scanning';
+            addLog("检测到面部特征，正在比对数据库...");
+
+            // 模拟识别过程 (2秒)
+            setTimeout(() => {
+              scanState.value = 'success';
+              currentUser.value = '李明'; // 模拟识别结果
+              addLog("识别成功：李明。请选择巡视职能。", 'success');
+            }, 2000);
+          }, 1000);
+        };
+
+        // 2. 选择角色并完成打卡
+        const selectRole = (role) => {
+          if (scanState.value !== 'success') return;
+
+          selectedRole.value = role;
+          addLog(`用户选择了职能：${role}`);
+
+          // 提交数据
+          setTimeout(() => {
+            completeCheckIn();
+          }, 500);
+        };
+
+        const completeCheckIn = () => {
+          // 更新统计
+          stats.month++;
+          stats.year++;
+          justUpdated.value = true;
+
+          // 更新上次记录
+          lastUser.value = currentUser.value;
+          lastRole.value = selectedRole.value;
+          lastTime.value = new Date().toLocaleTimeString();
+
+          addLog("数据已上传至后台。", 'success');
+          showSuccessModal.value = true;
+
+          // 3秒后移除高亮
+          setTimeout(() => { justUpdated.value = false; }, 3000);
+        };
+
+        const closeModal = () => {
+          showSuccessModal.value = false;
+          // 重置状态，准备下一次
+          scanState.value = 'idle';
+          currentUser.value = '';
+          selectedRole.value = '';
+          addLog("系统待机中...");
+
+          // 5秒后自动重新开始扫描
+          setTimeout(startProcess, 2000);
+        };
+
+        // 时钟
+        setInterval(() => {
+          const now = new Date();
+          currentTime.value = now.getFullYear() + '-' +
+            (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
+            now.getDate().toString().padStart(2, '0') + ' ' +
+            now.toLocaleTimeString();
+        }, 1000);
+
+        // 缩放适配 (保持统一)
+        const handleResize = () => {
+          const designWidth = 1920;
+          const designHeight = 1080;
+          const scale = Math.min(document.documentElement.clientWidth / designWidth, document.documentElement.clientHeight / designHeight);
+          const app = document.getElementById('app');
+          if (app) {
+            app.style.transform = `scale(${scale})`;
+            app.style.left = `${(document.documentElement.clientWidth - designWidth * scale) / 2}px`;
+            app.style.top = `${(document.documentElement.clientHeight - designHeight * scale) / 2}px`;
+          }
+        };
+
+        onMounted(() => {
+          handleResize();
+          window.addEventListener('resize', handleResize);
+          startProcess(); // 启动流程
+        });
+
+        return {
+          currentTime, scanState, currentUser, selectedRole,
+          stats, lastUser, lastRole, lastTime, logs,
+          showSuccessModal, justUpdated,
+          selectRole, closeModal
+        };
+      }
+    }).mount('#app');
+
+    // 全局缩放适配函数 (与其他页面保持一致)
+    function handleResize() {
+      const designWidth = 1920;
+      const designHeight = 1080;
+      const clientWidth = document.documentElement.clientWidth;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+      const app = document.getElementById('app');
+      if (app) {
+        app.style.transform = `scale(${scale})`;
+        const left = (clientWidth - designWidth * scale) / 2;
+        const top = (clientHeight - designHeight * scale) / 2;
+        app.style.left = `${left}px`;
+        app.style.top = `${top}px`;
+      }
+    }
+
+    // 页面跳转前重置缩放状态
+    window.addEventListener('beforeunload', () => {
+      document.body.style.opacity = '0';
+    });
+
+    // 页面加载完成后立即应用缩放
+    document.addEventListener('DOMContentLoaded', () => {
+      handleResize();
+      // 页面加载完成后淡入
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+      }, 50);
+    });
+
+    // 全局初始化入口
+    function initApp() {
+      handleResize();
+    }
+
+    // 唯一启动监听
+    window.addEventListener('load', initApp);
+    window.addEventListener('resize', handleResize);
+
+    // 导航切换函数 (与其他页面保持一致)
+    function switchNav(el) {
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(item => item.classList.remove('active'));
+      el.classList.add('active');
+      console.log("已切换至: " + el.querySelector('.nav-label').innerText);
+    }
+  </script>
+</body>
+
+</html>

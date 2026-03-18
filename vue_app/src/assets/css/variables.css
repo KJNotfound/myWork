@@ -1,0 +1,49 @@
+:root {
+  /* Dark Theme (Default) */
+  --bg-color: #020617;
+  --bg-panel: rgba(16, 24, 40, 0.75);
+  --bg-header: #0d1929;
+  --bg-cockpit: #020617;
+  --bg-sidebar: #081221;
+  
+  --border-color: rgba(79, 172, 254, 0.3);
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --accent-orange: #f97316;
+  --accent-purple: #8b5cf6;
+  
+  --pipe-color: #06b6d4;
+  --scada-grid: radial-gradient(rgba(100, 116, 139, 0.2) 1px, transparent 1px);
+  --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.light-mode {
+  /* Light Theme */
+  --bg-color: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-header: #ffffff;
+  --bg-cockpit: #ffffff;
+  --bg-sidebar: #f8fafc;
+
+  --border-color: #e2e8f0;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+
+  --accent-blue: #2563eb;
+  --accent-cyan: #2563eb;
+  --accent-green: #16a34a;
+  --accent-red: #dc2626;
+  --accent-orange: #ea580c;
+  --accent-purple: #7c3aed;
+  
+  --pipe-color: #2563eb;
+  --scada-grid: radial-gradient(rgba(148, 163, 184, 0.3) 1px, transparent 1px);
+  --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.1);
+}

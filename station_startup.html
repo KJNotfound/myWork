@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>一键启停 - 智慧换热站</title>
+  <script src="libs/vue.global.js"></script>
+  <link rel="stylesheet" href="fonts/iconfont.css">
+
+  <!-- 主题配置 -->
+  <script src="theme-config.js"></script>
+
+  <style>
+    /* 在线链接服务仅供平台体验和调试使用，平台不承诺服务的稳定性，企业客户需下载字体包自行发布使用并做好备份。 */
+
+    /* --- 1. 全局样式 --- */
+    :root {
+      --bg-color: #0f1a2b;
+      --panel-bg: rgba(16, 42, 67, 0.6);
+      --border-color: rgba(79, 172, 254, 0.3);
+      --text-primary: #ffffff;
+      --text-secondary: #b8cbe3;
+      --accent-blue: #4facfe;
+      --accent-cyan: #00f2fe;
+      --accent-red: #ff3300;
+      --accent-green: #00e676;
+      --accent-yellow: #ffd103;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: "Microsoft YaHei", sans-serif;
+      overflow: hidden;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .dashboard-root {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: left top;
+      display: flex;
+      background-color: #0c1626
+    }
+
+    /* --- 2. 侧边导航栏 --- */
+    .side-nav {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 110px;
+      height: 100%;
+      background: #081221;
+      border-right: 1px solid var(--accent-blue);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding-top: 60px;
+      transform: none !important;
+    }
+
+    .nav-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 15px 0;
+      position: relative;
+      transition: all 0.3s ease;
+      color: oklch(1 0 0 / 0.6);
+    }
+
+    .nav-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      writing-mode: horizontal-tb !important;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      letter-spacing: 1px;
+      opacity: 1 !important;
+      display: block;
+    }
+
+    /* 导航交互状态 */
+    .nav-item:hover,
+    .nav-item.active {
+      background: oklch(0.6 0.15 200 / 0.15);
+      color: #4facfe;
+    }
+
+    .nav-item.active .nav-label {
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.1);
+    }
+
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #4facfe;
+      box-shadow: 0 0 10px #4facfe;
+    }
+
+    /* --- 3. 主内容区域 --- */
+    .main-container {
+      flex: 1;
+      margin-left: 110px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 15px;
+    }
+
+    /* --- 4. 顶部 Header --- */
+    .top-bar {
+      height: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      background: var(--panel-bg);
+      border-bottom: 2px solid var(--accent-blue);
+      border-radius: 4px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    .btn-back {
+      padding: 10px 25px;
+      border: 1px solid var(--accent-blue);
+      background: rgba(79, 172, 254, 0.1);
+      color: var(--accent-blue);
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* --- 3. 主内容区 --- */
+    .main-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 25% 50% 25%;
+      /* 左中右布局 */
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+    }
+
+    .panel-title {
+      font-size: 20px;
+      color: var(--accent-cyan);
+      margin-bottom: 20px;
+      font-weight: bold;
+      border-left: 4px solid var(--accent-cyan);
+      padding-left: 10px;
+    }
+
+    /* 左侧：自检列表 */
+    .check-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .check-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+
+    .check-label {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .status-tag {
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .status-pending {
+      background: rgba(255, 255, 255, 0.1);
+      color: #aaa;
+    }
+
+    .status-ok {
+      background: rgba(0, 230, 118, 0.2);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .status-err {
+      background: rgba(255, 51, 0, 0.2);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    /* 中间：启动流程可视化 */
+    .process-visual {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      min-height: 500px;
+    }
+
+    /* 步骤条 */
+    .step-track {
+      display: flex;
+      justify-content: space-between;
+      width: 80%;
+      position: relative;
+      margin-bottom: 60px;
+    }
+
+    .step-track::before {
+      content: '';
+      position: absolute;
+      top: 25px;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 0;
+    }
+
+    .step-track-fill {
+      position: absolute;
+      top: 25px;
+      left: 0;
+      height: 4px;
+      background: var(--accent-cyan);
+      z-index: 0;
+      transition: width 0.5s ease;
+    }
+
+    .step-node {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.5;
+      transition: all 0.5s;
+    }
+
+    .step-node.active {
+      opacity: 1;
+    }
+
+    .step-node .step-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 8px;
+      transition: all 0.5s;
+      cursor: pointer;
+    }
+
+    .step-node .step-icon:hover {
+      transform: scale(1.1);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(79, 172, 254, 0.3);
+    }
+
+    .step-node .step-icon-active {
+      animation: pulse-glow 2s ease-in-out infinite;
+      transform: scale(1.05);
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 15px rgba(79, 172, 254, 0.6);
+        border-color: var(--accent-cyan);
+      }
+
+      50% {
+        box-shadow: 0 0 25px rgba(79, 172, 254, 0.9);
+        border-color: var(--accent-cyan);
+        transform: scale(1.08);
+      }
+    }
+
+    .step-node.active .step-icon,
+    .step-node .step-icon.step-icon-active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 15px var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.1);
+    }
+
+    .step-node.done .step-icon {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      background: rgba(0, 230, 118, 0.1);
+    }
+
+    .step-node.error .step-icon {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      animation: shake 0.5s;
+    }
+
+    /* 中心动画展示区 */
+    .anim-stage {
+      width: 100%;
+      height: 300px;
+      background: radial-gradient(circle, rgba(79, 172, 254, 0.1) 0%, transparent 70%);
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    /* 动态文字 */
+    .status-big {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 20px var(--accent-cyan);
+      margin-top: 20px;
+    }
+
+    /* 右侧：控制台 */
+    .console-log {
+      flex: 1;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      padding: 15px;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+      color: #00e676;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .log-line {
+      opacity: 0.8;
+    }
+
+    .log-line.error {
+      color: #ff3300;
+    }
+
+    .log-line.info {
+      color: #4facfe;
+    }
+
+    .btn-start-large {
+      width: 100%;
+      height: 80px;
+      background: linear-gradient(180deg, #1e3c5e, #0a1524);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 8px;
+      color: var(--accent-cyan);
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+    }
+
+    .btn-start-large:hover:not(:disabled) {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 40px var(--accent-cyan);
+    }
+
+    .btn-start-large:disabled {
+      border-color: #555;
+      color: #555;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* 停站按钮样式 */
+    .btn-start-large.btn-stop {
+      background: linear-gradient(180deg, #5e1e1e, #240a0a);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      box-shadow: 0 0 20px rgba(255, 80, 80, 0.2);
+    }
+
+    .btn-start-large.btn-stop:hover:not(:disabled) {
+      background: var(--accent-red);
+      color: #fff;
+      box-shadow: 0 0 40px var(--accent-red);
+    }
+
+    /* 简易泵动画 */
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .pump-spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px);
+      }
+
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    /* 白天模式样式 */
+    .light-mode {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    .light-mode .main-container {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .control-panel {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .status-panel {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .panel-title {
+      color: #1e40af !important;
+    }
+
+    .light-mode .status-item {
+      color: #64748b !important;
+    }
+
+    .light-mode .status-value {
+      color: #1e293b !important;
+    }
+
+    .light-mode .control-btn {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+      color: #ffffff !important;
+    }
+
+    .light-mode .control-btn:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+    }
+
+    .light-mode .control-btn.danger {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    }
+
+    .light-mode .control-btn.danger:hover {
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+    }
+
+    
+    /* 白天模式样式支持 */
+    body.light-mode {
+      --bg-color: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --border-color: rgba(37, 99, 235, 0.3);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    body.light-mode .dashboard-root {
+      background-color: #f8fafc;
+    }
+
+    body.light-mode .side-nav {
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    
+    body.light-mode .nav-item {
+      color: #64748b;
+    }
+    
+    body.light-mode .nav-item:hover,
+    body.light-mode .nav-item.active {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+    }
+    
+    body.light-mode .nav-item .iconfont {
+      color: #94a3b8;
+    }
+    
+    body.light-mode .nav-item:hover .iconfont,
+    body.light-mode .nav-item.active .iconfont {
+      color: #2563eb;
+    }
+
+    body.light-mode .nav-item.active .nav-label {
+      color: #2563eb !important;
+      font-weight: bold;
+    }
+
+    body.light-mode .nav-item.active::after {
+      background: #2563eb;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    }
+
+    body.light-mode .glass-panel,
+    body.light-mode .control-header,
+    body.light-mode .status-panel,
+    body.light-mode .step-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(37, 99, 235, 0.2);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    body.light-mode .page-title {
+      color: #1e40af;
+      text-shadow: none;
+    }
+
+    body.light-mode .step-title {
+      color: #1e40af;
+    }
+
+    body.light-mode .step-desc {
+      color: #64748b;
+    }
+
+    body.light-mode .status-label {
+      color: #64748b;
+    }
+
+    body.light-mode .status-value {
+      color: #1e293b;
+    }
+
+    body.light-mode .btn-start-large {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #2563eb;
+      color: #2563eb;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
+    }
+
+    body.light-mode .btn-start-large:hover:not(:disabled) {
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 0 30px rgba(37, 99, 235, 0.35);
+    }
+
+    body.light-mode .btn-start-large:disabled {
+      background: rgba(241, 245, 249, 0.9);
+      border-color: #cbd5e1;
+      color: #94a3b8;
+      box-shadow: none;
+    }
+
+    body.light-mode .btn-start-large.btn-stop {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #dc2626;
+      color: #dc2626;
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.12);
+    }
+
+    body.light-mode .btn-start-large.btn-stop:hover:not(:disabled) {
+      background: #dc2626;
+      color: #ffffff;
+      box-shadow: 0 0 30px rgba(220, 38, 38, 0.35);
+    }
+
+
+    
+  </style>
+</head>
+</head>
+
+<body>
+  <!-- 主题切换按钮 -->
+  <div id="app" class="dashboard-root">
+    <aside class="side-nav">
+      <div class="nav-wrapper">
+        <div class="nav-item" onclick="window.location.href='home.html'">
+          <i class="iconfont nav-icon">&#xe603;</i>
+          <div class="nav-label">首页</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='smart_heating_station_terminal.html'">
+          <i class="iconfont nav-icon">&#xe84a;</i>
+          <div class="nav-label">我的换热站</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='station_patrol.html'">
+          <i class="iconfont nav-icon">&#xe65c;</i>
+          <div class="nav-label">一键巡站</div>
+        </div>
+        <div class="nav-item active" onclick="window.location.href='station_startup.html'">
+          <i class="iconfont nav-icon">&#xe6db;</i>
+          <div class="nav-label">一键启停</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='health_monitor.html'">
+          <i class="iconfont nav-icon">&#xe61f;</i>
+          <div class="nav-label">健康监测</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='asset_inventory.html'">
+          <i class="iconfont nav-icon">&#xe668;</i>
+          <div class="nav-label">资产盘点</div>
+        </div>
+        <div class="nav-item" onclick="window.location.href='system_settings.html'">
+          <i class="iconfont nav-icon">&#xe602;</i>
+          <div class="nav-label">系统设置</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-container">
+      <div class="top-bar">
+        <div class="page-title">一键启停系统</div>
+      </div>
+
+      <div class="main-grid">
+
+        <div class="panel">
+          <div class="panel-title">1. 系统自检项</div>
+          <div class="check-list">
+            <div class="check-item" v-for="(item, index) in checkItems" :key="index">
+              <span class="check-label">{{ item.name }}</span>
+              <span class="status-tag" :class="getStatusClass(item.status)">
+                {{ item.statusText }}
+              </span>
+            </div>
+          </div>
+
+          <div
+            style="margin-top: auto; padding: 15px; color: var(--text-secondary); font-size: 13px; line-height: 1.5; background: rgba(255,255,255,0.05); border-radius: 4px;">
+            <strong style="color: var(--accent-yellow)">提示：</strong><br>
+            如自检发现“阀门关闭”或“液位过低”，系统将自动中止启动流程并报警。请现场处理后重试。
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">2. 启动进程可视化</div>
+
+          <div class="process-visual">
+            <div class="step-track">
+              <div class="step-track-fill" :style="{ width: progressWidth + '%' }"></div>
+
+              <div class="step-node" :class="getStepClass(0)" @click="currentStep === 0 ? null : null">
+                <i class="iconfont nav-icon step-icon" :class="{ 'step-icon-active': currentStep === 0 }">&#xe688;</i>
+                <div style="font-size: 14px;">系统检查</div>
+              </div>
+              <div class="step-node" :class="getStepClass(1)" @click="currentStep === 1 ? null : null">
+                <i class="iconfont nav-icon step-icon" :class="{ 'step-icon-active': currentStep === 1 }">&#xe612;</i>
+                <div style="font-size: 14px;">启动补水</div>
+              </div>
+              <div class="step-node" :class="getStepClass(2)" @click="currentStep === 2 ? null : null">
+                <i class="iconfont nav-icon step-icon" :class="{ 'step-icon-active': currentStep === 2 }">&#xe60f;</i>
+                <div style="font-size: 14px;">启动循环</div>
+              </div>
+              <div class="step-node" :class="getStepClass(3)" @click="currentStep === 3 ? null : null">
+                <i class="iconfont nav-icon step-icon" :class="{ 'step-icon-active': currentStep === 3 }">&#xe606;</i>
+                <div style="font-size: 14px;">完成</div>
+              </div>
+            </div>
+
+            <div class="anim-stage">
+
+              <div v-if="currentStep === -1" style="text-align: center;">
+                <div style="font-size: 60px; color: var(--text-secondary); opacity: 0.3;">🛑</div>
+                <div class="status-big" style="color: var(--text-secondary)">系统待机中</div>
+              </div>
+
+              <div v-if="currentStep === 1" style="text-align: center;">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                  <path d="M50,150 L150,150 L150,50 L50,50 Z" fill="none" stroke="#4facfe" stroke-width="2" />
+                  <rect x="50" y="100" width="100" height="50" fill="rgba(79,172,254,0.5)">
+                    <animate attributeName="y" values="100;60" dur="2s" fill="freeze" />
+                    <animate attributeName="height" values="50;90" dur="2s" fill="freeze" />
+                  </rect>
+                  <text x="100" y="180" text-anchor="middle" fill="#fff" font-size="14">补水加压中...</text>
+                </svg>
+                <div class="status-big">正在建立定压...</div>
+                <div style="color: #fff; margin-top: 10px;">当前回压: {{ currentPressure }} MPa</div>
+              </div>
+
+              <div v-if="currentStep === 2" style="text-align: center;">
+                <svg width="150" height="150" viewBox="0 0 100 100" class="pump-spin">
+                  <path d="M50,50 L50,10 A40,40 0 0,1 90,50 Z" fill="#00e676" opacity="0.8" />
+                  <path d="M50,50 L90,50 A40,40 0 0,1 50,90 Z" fill="#00e676" opacity="0.6" />
+                  <path d="M50,50 L50,90 A40,40 0 0,1 10,50 Z" fill="#00e676" opacity="0.4" />
+                  <circle cx="50" cy="50" r="10" fill="#fff" />
+                </svg>
+                <div class="status-big" style="color: var(--accent-green)">循环泵启动中</div>
+              </div>
+
+              <div v-if="currentStep === 3" style="text-align: center;">
+                <div style="font-size: 80px; color: var(--accent-green);">✔</div>
+                <div class="status-big" style="color: var(--accent-green)">启站流程完成</div>
+              </div>
+
+              <div v-if="errorMsg"
+                style="text-align: center; position: absolute; background: rgba(0,0,0,0.8); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 60px;">⚠️</div>
+                <div style="color: var(--accent-red); font-size: 24px; margin-top: 20px;">{{ errorMsg }}</div>
+                <button @click="resetSystem"
+                  style="margin-top: 20px; padding: 10px 30px; background: var(--accent-red); border: none; color: #fff; cursor: pointer;">重置系统</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">3. 控制操作台</div>
+
+          <div class="console-log" id="consoleLog">
+            <div class="log-line" v-for="(log, idx) in logs" :key="idx" :class="log.type">
+              [{{ log.time }}] {{ log.text }}
+            </div>
+          </div>
+
+          <button class="btn-start-large" :class="{ 'btn-stop': currentStep === 3 }" @click="handleStart"
+            :disabled="isRunning">
+            {{ btnText }}
+          </button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        // 状态
+        const isRunning = ref(false);
+        const currentStep = ref(-1); // -1:待机, 0:检查, 1:补水, 2:循环, 3:完成
+        const progressWidth = ref(0);
+        const errorMsg = ref("");
+        const currentPressure = ref(0.25);
+
+        // 自检项数据
+        const checkItems = reactive([
+          { name: "一二次侧阀门状态", status: 0, statusText: "待检" }, // 0:待检, 1:正常, 2:异常
+          { name: "自来水阀门状态", status: 0, statusText: "待检" },
+          { name: "水箱液位监测", status: 0, statusText: "待检" }
+        ]);
+
+        const logs = reactive([
+          { time: new Date().toLocaleTimeString(), text: "系统就绪，等待指令...", type: "info" }
+        ]);
+
+        const btnText = computed(() => {
+          if (errorMsg.value) return "系统异常";
+          if (isRunning.value) {
+            if (currentStep.value === 3) return "正在停站...";
+            return "正在启动...";
+          }
+          if (currentStep.value === 3) return "一键停站";
+          return "一键启动";
+        });
+
+        // 辅助方法
+        const addLog = (text, type = "normal") => {
+          logs.push({ time: new Date().toLocaleTimeString(), text, type });
+          nextTick(() => {
+            const el = document.getElementById('consoleLog');
+            if (el) el.scrollTop = el.scrollHeight;
+          });
+        };
+
+        const getStatusClass = (status) => {
+          if (status === 1) return 'status-ok';
+          if (status === 2) return 'status-err';
+          return 'status-pending';
+        };
+
+        const getStepClass = (stepIndex) => {
+          if (stepIndex < currentStep.value) return 'done';
+          if (stepIndex === currentStep.value) return errorMsg.value ? 'error' : 'active';
+          return '';
+        };
+
+        // 核心流程逻辑
+        const handleStart = async () => {
+          if (isRunning.value) return;
+
+          // 如果当前是启动完成状态，执行停站操作
+          if (currentStep.value === 3) {
+            isRunning.value = true;
+            addLog("=== 停站流程开始 ===", "info");
+
+            // 步骤1：停止循环泵
+            addLog("步骤1/2: 停止循环泵...");
+            await wait(2000);
+            addLog("循环泵已停止", "info");
+
+            // 步骤2：停止补水泵
+            addLog("步骤2/2: 停止补水泵...");
+            await wait(2000);
+
+            // 模拟压力下降
+            const pressureInterval = setInterval(() => {
+              if (currentPressure.value > 0.25) currentPressure.value = (parseFloat(currentPressure.value) - 0.05).toFixed(2);
+            }, 500);
+
+            await wait(3000);
+            clearInterval(pressureInterval);
+            addLog("系统压力已降至安全水平", "info");
+
+            // 重置系统状态
+            currentStep.value = -1;
+            progressWidth.value = 0;
+            isRunning.value = false;
+            addLog("=== 换热站停站完成 ===", "info");
+            return;
+          }
+
+          // 启动流程
+          isRunning.value = true;
+          currentStep.value = 0;
+          progressWidth.value = 0;
+          logs.length = 0; // 清空日志
+          addLog("=== 启动流程开始 ===", "info");
+
+          // 步骤1：系统自检 (模拟2秒)
+          addLog("步骤1/3: 开始系统硬件自检...");
+          // 模拟逐个检查
+          for (let i = 0; i < checkItems.length; i++) {
+            await wait(800);
+            // 模拟随机故障 (这里设为总是成功，实际项目可接API)
+            const isSuccess = true;
+            if (isSuccess) {
+              checkItems[i].status = 1;
+              checkItems[i].statusText = "正常";
+              addLog(`- ${checkItems[i].name}: 正常`, "info");
+            } else {
+              checkItems[i].status = 2;
+              checkItems[i].statusText = "异常";
+              failProcess(`${checkItems[i].name} 异常，流程中止`);
+              return;
+            }
+          }
+          progressWidth.value = 33;
+
+          // 步骤2：启动补水 (模拟3秒)
+          await wait(1000);
+          currentStep.value = 1;
+          addLog("步骤2/3: 启动补水泵，建立系统定压...");
+
+          // 模拟压力上升动画
+          const pressureInterval = setInterval(() => {
+            if (currentPressure.value < 0.6) currentPressure.value = (parseFloat(currentPressure.value) + 0.05).toFixed(2);
+          }, 500);
+
+          await wait(3000);
+          clearInterval(pressureInterval);
+          addLog("系统定压已达标 (0.60 MPa)", "info");
+          progressWidth.value = 66;
+
+          // 步骤3：启动循环 (模拟3秒)
+          await wait(1000);
+          currentStep.value = 2;
+          addLog("步骤3/3: 启动循环泵...");
+          addLog("检测到联锁保护正常...", "normal");
+          await wait(2000);
+          addLog("循环泵运行平稳，频率 35Hz", "info");
+
+          // 完成
+          progressWidth.value = 100;
+          currentStep.value = 3;
+          isRunning.value = false;
+          addLog("=== 换热站启动成功 ===", "info");
+        };
+
+        const failProcess = (msg) => {
+          errorMsg.value = msg;
+          addLog(msg, "error");
+          isRunning.value = false;
+        };
+
+        const resetSystem = () => {
+          errorMsg.value = "";
+          currentStep.value = -1;
+          progressWidth.value = 0;
+          currentPressure.value = 0.25;
+          checkItems.forEach(i => { i.status = 0; i.statusText = "待检"; });
+          addLog("系统已重置", "info");
+        };
+
+        const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // 导航切换函数
+        const switchNav = (el) => {
+          const items = document.querySelectorAll('.nav-item');
+          items.forEach(item => item.classList.remove('active'));
+          el.classList.add('active');
+          console.log("已切换至: " + el.querySelector('.nav-label').innerText);
+        };
+
+        // 缩放适配 (与smart_heating_station_terminal.html保持一致)
+        const handleResize = () => {
+          const designWidth = 1920;
+          const designHeight = 1080;
+          const clientWidth = document.documentElement.clientWidth;
+          const clientHeight = document.documentElement.clientHeight;
+
+          const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+          const app = document.getElementById('app');
+          if (app) {
+            app.style.transform = `scale(${scale})`;
+            const left = (clientWidth - designWidth * scale) / 2;
+            const top = (clientHeight - designHeight * scale) / 2;
+            app.style.left = `${left}px`;
+            app.style.top = `${top}px`;
+          }
+        };
+
+        onMounted(() => {
+          handleResize();
+          window.addEventListener('resize', handleResize);
+        });
+
+        return {
+          isRunning, currentStep, progressWidth, checkItems, logs, btnText, errorMsg, currentPressure,
+          getStatusClass, getStepClass, handleStart, resetSystem
+        };
+      }
+    }).mount('#app');
+
+    // 全局缩放适配函数
+    function handleResize() {
+      const designWidth = 1920;
+      const designHeight = 1080;
+      const clientWidth = document.documentElement.clientWidth;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+      const app = document.getElementById('app');
+      if (app) {
+        app.style.transform = `scale(${scale})`;
+        const left = (clientWidth - designWidth * scale) / 2;
+        const top = (clientHeight - designHeight * scale) / 2;
+        app.style.left = `${left}px`;
+        app.style.top = `${top}px`;
+      }
+    }
+
+    // 页面跳转前重置缩放状态
+    window.addEventListener('beforeunload', () => {
+      document.body.style.opacity = '0';
+    });
+
+    // 页面加载完成后立即应用缩放
+    document.addEventListener('DOMContentLoaded', () => {
+      handleResize();
+      // 页面加载完成后淡入
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+      }, 50);
+    });
+
+    // 全局初始化入口 (与smart_heating_station_terminal.html保持一致)
+    function initApp() {
+      handleResize();
+    }
+
+    // 唯一启动监听
+    window.addEventListener('load', initApp);
+    window.addEventListener('resize', handleResize);
+  </script>
+</body>
+
+</html>

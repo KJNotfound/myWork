@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@import url('./variables.css');
+
+/* Standard Body Styles to prevent Preflight resets from breaking the theme */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure the cockpit areas remain dark regardless of theme */
+.scada-body, .bg-scada-bg {
+  background-color: var(--bg-cockpit) !important;
+}
+
+/* Fix for overlapping/bunched labels: ensure utility classes are generated and applied */
+.absolute { position: absolute !important; }
+.relative { position: relative !important; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.flex-1 { flex: 1 1 0%; }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+}
+
+.scada-grid {
+  background-image: var(--scada-grid);
+  background-size: 30px 30px;
+}
+
+/* Iconfont */
+.iconfont {
+  font-family: "iconfont" !important;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-blue);
+}

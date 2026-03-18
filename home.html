@@ -5,6 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>智慧换热站智能终端</title>
+  <script src="libs/vue.global.js"></script>
+  <style>
+    /* 在线链接服务仅供平台体验和调试使用，平台不承诺服务的稳定性，企业客户需下载字体包自行发布使用并做好备份。 */
+  </style>
+  <link rel="stylesheet" href="fonts/iconfont.css">
+
+  <!-- 主题配置 -->
+  <script src="theme-config.js"></script>
+
   <style>
     :root {
       /* 核心颜色定义 */
@@ -19,12 +28,83 @@
       padding: 0;
       font-family: "Microsoft YaHei", sans-serif;
       background-color: var(--bg-dark);
-      background: radial-gradient(circle at center, #10213d 0%, #070b14 100%);
-      color: #ffffff;
-      height: 100vh;
+      background: linear-gradient(135deg, #0a1929 0%, #001e3c 50%, #0a1929 100%);
+      color: var(--text-primary);
+      font-family: "Microsoft YaHei", sans-serif;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    /* 布局结构 */
+    .dashboard-root {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: left top;
       display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      background-color: #0c1626;
+    }
+
+    /* 白天模式支持 */
+    body.light-mode {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    body.light-mode .dashboard-root {
+      background-color: #f8fafc;
+    }
+
+    /* 标题样式 */
+    .nav-header {
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: oklch(0 0 0 / 0.4);
+      border-bottom: 2px solid var(--border-blue);
+      box-shadow: 0 5px 15px oklch(0.7 0.15 200 / 0.1);
+      z-index: 10;
+      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .glow-title {
+      color: #ffffff;
+      font-size: 2rem;
+      letter-spacing: 6px;
+      font-weight: bold;
+      text-shadow: var(--white-glow);
+      margin: 0;
+    }
+
+    body.light-mode .glow-title {
+      text-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+      color: #1e40af;
+    }
+
+    body.light-mode .grid-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      color: #1e293b;
+    }
+
+    body.light-mode .grid-card:hover {
+      background: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+    }
+
+    body.light-mode .nav-icon {
+      color: #2563eb;
+      text-shadow: none;
+    }
+
+    body.light-mode .label {
+      color: #1e293b;
+      text-shadow: none;
     }
 
     /* 炫酷科技背景：扫描线效果 */
@@ -43,63 +123,32 @@
       pointer-events: none;
     }
 
-    .nav-header {
-      height: 80px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: oklch(0 0 0 / 0.4);
-      border-bottom: 2px solid var(--border-blue);
-      box-shadow: 0 5px 15px oklch(0.7 0.15 200 / 0.1);
-      z-index: 10;
-    }
 
-    .glow-title {
-      color: #ffffff;
-      font-size: 2rem;
-      letter-spacing: 6px;
-      font-weight: bold;
-      text-shadow: var(--white-glow);
-      margin: 0;
-    }
 
+    /* 主容器布局 */
     .main-container {
+      width: 100%;
+      height: 100%;
       display: flex;
-      flex: 1;
-      padding: 30px;
-      gap: 30px;
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+      position: relative;
       z-index: 5;
-    }
-
-    /* 左侧边栏 */
-    .sidebar {
-      width: 80px;
-      background: oklch(0.1 0.02 250 / 0.95);
-      border-right: 1px solid var(--border-blue);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 40px;
-    }
-
-    .nav-header-only {
-      writing-mode: vertical-rl;
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--tech-blue);
-      letter-spacing: 15px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-shadow: 0 0 15px oklch(0.7 0.15 200 / 0.8);
     }
 
     /* 3x3 矩阵功能区 */
     .function-grid {
+      margin-left: 0;
       flex: 1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
       gap: 25px;
+      position: relative;
+      z-index: 10;
+      margin-top: -200px;
+      padding-top: 200px;
     }
 
     .grid-card {
@@ -112,7 +161,7 @@
       align-items: center;
       transition: all 0.4s ease;
       cursor: pointer;
-      /* 确保鼠标移动上去是手型 */
+      z-index: 5;
     }
 
     .grid-card::before,
@@ -170,6 +219,13 @@
       filter: drop-shadow(0 0 5px var(--tech-blue));
     }
 
+    .grid-card .iconfont {
+      font-size: 40px;
+      color: var(--tech-blue);
+      margin-bottom: 6px;
+      filter: drop-shadow(0 0 5px var(--tech-blue));
+    }
+
     .label {
       font-size: 1.4rem;
       color: #a0c4ff;
@@ -200,6 +256,12 @@
       filter: drop-shadow(0 0 10px oklch(1 0 0 / 0.8));
     }
 
+    /* 中心模块鼠标悬停时iconfont样式 */
+    .center-module:hover .iconfont {
+      color: #ffffff;
+      filter: drop-shadow(0 0 10px oklch(1 0 0 / 0.8));
+    }
+
     .active-module:hover {
       transform: translateY(-5px) scale(1.02);
       border-color: #ffffff;
@@ -222,73 +284,173 @@
       filter: drop-shadow(0 0 10px oklch(1 0 0 / 0.8));
     }
 
+    .active-module:hover .iconfont {
+      color: #ffffff;
+      filter: drop-shadow(0 0 10px oklch(1 0 0 / 0.8));
+    }
+
     .empty-slot {
       border: 1px dashed oklch(0.7 0.15 200 / 0.1);
       background: transparent;
       pointer-events: none;
+    }
+
+    /* 白天模式样式 */
+    .light-mode {
+      background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%) !important;
+      color: #1e293b !important;
+    }
+
+    .light-mode .grid-card {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .center-module {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .light-mode .grid-card:hover,
+    .light-mode .center-module:hover {
+      background: rgba(248, 250, 252, 0.95) !important;
+      border-color: #2563eb !important;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.2) !important;
+    }
+
+    .light-mode .label {
+      color: #1e40af !important;
+    }
+
+    .light-mode .description {
+      color: #64748b !important;
+    }
+
+    .light-mode .grid-card svg,
+    .light-mode .grid-card .iconfont {
+      fill: #2563eb !important;
+      color: #2563eb !important;
+      filter: drop-shadow(0 0 5px #2563eb) !important;
     }
   </style>
 </head>
 
 <body>
 
-  <header class="nav-header">
-    <h2 class="glow-title">换热站智能终端控制中心</h2>
-  </header>
+  <div class="dashboard-root" id="app">
+    <main class="main-container">
+      <header class="nav-header">
+        <h2 class="glow-title">换热站智能终端控制中心</h2>
+      </header>
 
-  <main class="main-container">
-    <div class="sidebar">
-      <div class="nav-header-only" onclick="window.location.href='index.html'">
-        智能换热站
-      </div>
-    </div>
+      <section class="function-grid">
+        <div class="grid-card active-module" onclick="window.location.href='station_patrol.html'">
+          <i class="iconfont nav-icon">&#xe65c;</i>
+          <div class="label">一键巡站</div>
+        </div>
+        <div class="grid-card empty-slot"></div>
+        <div class="grid-card active-module" onclick="window.location.href='health_monitor.html'">
+          <i class="iconfont nav-icon">&#xe61f;</i>
+          <div class="label">健康监测分析</div>
+        </div>
 
-    <section class="function-grid">
-      <div class="grid-card active-module">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-        </svg>
-        <div class="label">一键巡站</div>
-      </div>
-      <div class="grid-card empty-slot"></div>
-      <div class="grid-card active-module">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-2v-4H8v-2h2V7h2v4h2v2h-2v4z" />
-        </svg>
-        <div class="label">健康监测分析</div>
-      </div>
+        <div class="grid-card empty-slot"></div>
 
-      <div class="grid-card empty-slot"></div>
+        <div class="grid-card active-module center-module"
+          onclick="window.location.href='smart_heating_station_terminal.html'">
 
-      <div class="grid-card active-module center-module"
-        onclick="window.location.href='./smart_heating_station_terminal.html'">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm10 12h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z" />
-        </svg>
-        <div class="label">我的换热站</div>
-      </div>
+          <i class="iconfont nav-icon">&#xe84a;</i>
+          <div class="label">我的换热站</div>
+        </div>
 
-      <div class="grid-card empty-slot"></div>
+        <div class="grid-card empty-slot"></div>
 
-      <div class="grid-card active-module">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7a6.92 6.92 0 0 1 2.59-5.41L6.17 5.17A8.992 8.992 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z" />
-        </svg>
-        <div class="label">一键启停</div>
-      </div>
-      <div class="grid-card empty-slot"></div>
-      <div class="grid-card active-module">
-        <svg viewBox="0 0 24 24">
-          <path d="M13 13v8h8v-8h-8zM3 21h8v-8H3v8zM3 3v8h8V3H3zm13.66 2L13 11h7.32L16.66 5z" />
-        </svg>
-        <div class="label">资产盘点</div>
-      </div>
-    </section>
-  </main>
+        <div class="grid-card active-module" onclick="window.location.href='station_startup.html'">
+          <i class="iconfont nav-icon">&#xe6db;</i>
+          <div class="label">一键启停</div>
+        </div>
+        <div class="grid-card empty-slot"></div>
+        <div class="grid-card active-module" onclick="window.location.href='asset_inventory.html'">
+          <i class="iconfont nav-icon">&#xe668;</i>
+          <div class="label">资产盘点</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const currentTime = ref('');
+
+        // 更新时间
+        const updateTime = () => {
+          const now = new Date();
+          currentTime.value = now.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+        };
+
+        onMounted(() => {
+          updateTime();
+          setInterval(updateTime, 1000);
+        });
+
+        return {
+          currentTime
+        };
+      }
+    }).mount('#app');
+
+    // 全局缩放适配函数
+    function handleResize() {
+      const designWidth = 1920;
+      const designHeight = 1080;
+      const clientWidth = document.documentElement.clientWidth;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const scale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
+
+      const app = document.getElementById('app');
+      if (app) {
+        app.style.transform = `scale(${scale})`;
+        const left = (clientWidth - designWidth * scale) / 2;
+        const top = (clientHeight - designHeight * scale) / 2;
+        app.style.left = `${left}px`;
+        app.style.top = `${top}px`;
+      }
+    }
+
+    // 页面跳转前重置缩放状态
+    window.addEventListener('beforeunload', () => {
+      document.body.style.opacity = '0';
+    });
+
+    // 页面加载完成后立即应用缩放
+    document.addEventListener('DOMContentLoaded', () => {
+      handleResize();
+      // 页面加载完成后淡入
+      setTimeout(() => {
+        document.body.style.opacity = '1';
+      }, 50);
+    });
+
+    // 全局初始化入口
+    function initApp() {
+      handleResize();
+    }
+
+    // 唯一启动监听
+    window.addEventListener('load', initApp);
+    window.addEventListener('resize', handleResize);
+  </script>
 </body>
 
 </html>
