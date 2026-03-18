@@ -1,8 +1,5 @@
 import axios from 'axios'
-const DEEPSEEK_API_URL = 'https://models.github.ai/inference/chat/completions'
-
-const API_KEY = process.env.VUE_APP_DEEPSEEK_KEY
-const GITHUB_MODELS_API_VERSION = '2022-11-28'
+const DEEPSEEK_API_URL = '/__ai/inference/chat/completions'
 const MODEL_ID = 'azureml-deepseek/DeepSeek-V3-0324'
 
 const SYSTEM_PROMPT = `你是一位专业的供热运维专家。
@@ -14,10 +11,6 @@ const SYSTEM_PROMPT = `你是一位专业的供热运维专家。
 3. 给出明确的运维建议。`
 
 export const askDeepSeek = async (historyMessages, currentMetrics) => {
-  if (!API_KEY) {
-    throw new Error('未配置 GitHub Models Token，请在 .env.local 设置 VUE_APP_DEEPSEEK_KEY')
-  }
-
   const contextPrompt = `
 ${SYSTEM_PROMPT}
 
@@ -28,29 +21,21 @@ ${currentMetrics ? JSON.stringify(currentMetrics, null, 2) : '暂无实时数据
   const messages = [{ role: 'system', content: contextPrompt }, ...historyMessages]
 
   try {
-    const response = await axios.post(
-      DEEPSEEK_API_URL,
-      {
-        model: MODEL_ID,
-        messages: messages,
-        temperature: 0.3,
-      },
-      {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${API_KEY}`,
-          'X-GitHub-Api-Version': GITHUB_MODELS_API_VERSION,
-        },
-      },
-    )
+    const response = await axios.post(DEEPSEEK_API_URL, {
+      model: MODEL_ID,
+      messages: messages,
+      temperature: 0.3,
+    })
 
     return response.data.choices[0].message.content
   } catch (error) {
+    if (!error.response) {
+      throw new Error('网络请求失败（可能是代理未生效或网络受限），请重启 npm run dev 并检查控制台网络请求')
+    }
     throw new Error(
       error.response?.data?.error?.message ||
         error.response?.data?.message ||
-        '请求 AI 服务失败，请检查 URL 或 Token 权限',
+        `请求 AI 服务失败（HTTP ${error.response?.status ?? '未知'}），请检查 Token 权限或接口状态`,
     )
   }
 }

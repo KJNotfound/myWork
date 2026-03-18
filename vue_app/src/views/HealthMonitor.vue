@@ -185,10 +185,6 @@ const sendMessage = () => {
 
   triggerAiAnalysis(input)
 }
-
-onMounted(() => {
-  setTimeout(startScan, 500)
-})
 </script>
 
 <template>
