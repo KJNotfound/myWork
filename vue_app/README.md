@@ -67,3 +67,18 @@ src/
 - 主题切换与持久化在 `src/stores/theme.js`
 - 如果未接入后端接口，部分页面会使用 `src/stores/realtime.js` 的模拟数据驱动展示
 
+## 常见问题
+
+### 为什么 Git 提示“LF 变成 CRLF”？
+
+这表示同一文件的换行符被转换了（Windows 常见）。通常不影响运行，但会导致 Git 认为文件发生了改动；建议在团队内统一换行符策略并保持一致。
+
+### AI 监控分析功能配置
+
+系统集成了 DeepSeek-V3 供热运维专家分析功能。要在本地或线上正常运行，请在项目根目录创建一个 `.env` 文件，并添加你的 API Key：
+
+```env
+VUE_APP_DEEPSEEK_KEY=你的_DEEPSEEK_API_KEY_放在这里
+```
+注意：`.env` 文件已被 git 忽略，请勿将其提交到版本库中。
+

@@ -1,117 +1,204 @@
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { useRealTimeStore } from '../stores/realtime'
+import { askDeepSeek } from '../services/aiService'
 
-const isScanning = ref(false);
-const scanProgress = ref(0);
-const healthScore = ref(0);
-const scanTimer = ref("00:00:00");
-const userInput = ref("");
-const currentSelectedId = ref(null);
-const chatBoxRef = ref(null);
+const realTimeStore = useRealTimeStore()
+
+const isScanning = ref(false)
+const scanProgress = ref(0)
+const healthScore = ref(0)
+const scanTimer = ref('00:00:00')
+const userInput = ref('')
+const currentSelectedId = ref(null)
+const chatBoxRef = ref(null)
+const isAiTyping = ref(false)
 
 onMounted(() => {
-  setTimeout(startScan, 500);
-});
+  setTimeout(startScan, 500)
+})
 
 const categories = reactive([
   {
-    id: 1, title: "系统连接和健康状态", isOpen: true, errorCount: 2,
+    id: 1,
+    title: '系统连接和健康状态',
+    isOpen: true,
+    errorCount: 2,
     items: [
-      { id: 101, desc: "1. 目前换热站实时温度105℃异常", aiAnalysis: "目前换热站内温度显示过高，检测到是5分钟前突发性的，考虑站内环境温度表计异常。建议立即派人核查表计或检查是否有火灾隐患。" },
-      { id: 102, desc: "2. 目前低区换热器换热效率为10%异常", aiAnalysis: "板换效率极低，且一二次侧温差过大。初步判断为板片严重结垢或反接。建议列入检修计划进行反冲洗。" }
-    ]
+      {
+        id: 101,
+        desc: '1. 目前换热站实时温度105℃异常',
+        aiAnalysis:
+          '目前换热站内温度显示过高，检测到是5分钟前突发性的，考虑站内环境温度表计异常。建议立即派人核查表计或检查是否有火灾隐患。',
+      },
+      {
+        id: 102,
+        desc: '2. 目前低区换热器换热效率为10%异常',
+        aiAnalysis: '板换效率极低，且一二次侧温差过大。初步判断为板片严重结垢或反接。建议列入检修计划进行反冲洗。',
+      },
+    ],
   },
   {
-    id: 2, title: "异常数据校验", isOpen: false, errorCount: 1,
-    items: [{ id: 201, desc: "1. 一次侧阀门开度0%但有大流量", aiAnalysis: "物理逻辑冲突：阀门反馈关闭但流量计读数很大。可能是阀门反馈信号故障或流量计漂移。建议优先检查阀门限位开关。" }]
+    id: 2,
+    title: '异常数据校验',
+    isOpen: false,
+    errorCount: 1,
+    items: [
+      {
+        id: 201,
+        desc: '1. 一次侧阀门开度0%但有大流量',
+        aiAnalysis:
+          '物理逻辑冲突：阀门反馈关闭但流量计读数很大。可能是阀门反馈信号故障或流量计漂移。建议优先检查阀门限位开关。',
+      },
+    ],
   },
   {
-    id: 3, title: "经济运行情况", isOpen: false, errorCount: 1,
-    items: [{ id: 301, desc: "1. 夜间补水量异常偏高", aiAnalysis: "夜间补水量达到 5t/h，远超正常值。结合压力曲线分析，疑似二网末端存在泄漏或用户放水。建议排查高区管网。" }]
-  }
-]);
+    id: 3,
+    title: '经济运行情况',
+    isOpen: false,
+    errorCount: 1,
+    items: [
+      {
+        id: 301,
+        desc: '1. 夜间补水量异常偏高',
+        aiAnalysis:
+          '夜间补水量达到 5t/h，远超正常值。结合压力曲线分析，疑似二网末端存在泄漏或用户放水。建议排查高区管网。',
+      },
+    ],
+  },
+])
 
-const totalErrors = computed(() => categories.reduce((sum, c) => sum + c.errorCount, 0));
-const messages = reactive([{ role: 'ai', text: '体检已完成。左侧列出了检测到的异常项目，请点击查看详细分析。', hasAction: false }]);
+const totalErrors = computed(() => categories.reduce((sum, c) => sum + c.errorCount, 0))
+const messages = reactive([
+  { role: 'ai', text: '体检已完成。左侧列出了检测到的异常项目，请点击查看详细分析。', hasAction: false },
+])
 
 const scrollToBottom = async () => {
-  await nextTick();
+  await nextTick()
   if (chatBoxRef.value) {
-    chatBoxRef.value.scrollTop = chatBoxRef.value.scrollHeight;
+    chatBoxRef.value.scrollTop = chatBoxRef.value.scrollHeight
   }
-};
+}
 
-const startScan = () => {
-  isScanning.value = true;
-  scanProgress.value = 0;
-  healthScore.value = 0;
-  messages.length = 0;
-  let p = 0;
-  const interval = setInterval(() => {
-    p += 2;
-    scanProgress.value = p;
-    const sec = Math.floor(p / 100 * 600);
-    scanTimer.value = `00:${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`;
-    if (p >= 100) {
-      clearInterval(interval);
-      isScanning.value = false;
-      healthScore.value = 85;
-      messages.push({ role: 'ai', text: '监测完成！发现 ' + totalErrors.value + ' 个异常项，请点击左侧列表查看分析。', hasAction: false });
-      scrollToBottom();
+const getLatestMetrics = () => {
+  // 从 realTimeStore 提取最新指标
+  const temps = realTimeStore.tempData
+  const lastIdx = temps.time.length - 1
+
+  if (lastIdx >= 0) {
+    return {
+      time: temps.time[lastIdx],
+      targetTemp: temps.target[lastIdx],
+      actualTemp: temps.actual[lastIdx],
+      returnTemp: temps.return[lastIdx],
+      energyValue: realTimeStore.energyData.value[realTimeStore.energyData.value.length - 1],
     }
-  }, 30);
-};
+  }
+  return null
+}
 
-const toggleCategory = (cate) => cate.isOpen = !cate.isOpen;
+const startScan = async () => {
+  isScanning.value = true
+  scanProgress.value = 0
+  healthScore.value = 0
+  messages.length = 0
+  let p = 0
+
+  // 主动触发系统体检AI分析
+  messages.push({ role: 'ai', text: '正在获取系统实时指标并分析健康状态...', hasAction: false })
+
+  const interval = setInterval(() => {
+    p += 2
+    scanProgress.value = p
+    const sec = Math.floor((p / 100) * 600)
+    scanTimer.value = `00:${Math.floor(sec / 60)
+      .toString()
+      .padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`
+    if (p >= 100) {
+      clearInterval(interval)
+      isScanning.value = false
+      healthScore.value = 85
+
+      triggerAiAnalysis('系统监测完成，请根据当前运行指标给出整体健康评估。')
+    }
+  }, 30)
+}
+
+const toggleCategory = (cate) => (cate.isOpen = !cate.isOpen)
 
 const selectIssue = (item) => {
-  currentSelectedId.value = item.id;
-  setTimeout(() => {
-    messages.push({ 
-      role: 'ai', 
-      text: `<strong>针对 "${item.desc}" 的分析：</strong><br/>${item.aiAnalysis}`, 
-      hasAction: true, 
-      isSynced: false, 
-      relatedId: item.id 
-    });
-    scrollToBottom();
-  }, 300);
-};
+  currentSelectedId.value = item.id
+  triggerAiAnalysis(
+    `发现异常项：${item.desc}。之前的系统诊断为：${item.aiAnalysis}。请结合当前实时指标，给出进一步的排查建议。`,
+  )
+}
 
 const syncToTask = (msg) => {
-  if (!msg.isSynced) msg.isSynced = true;
-};
+  if (!msg.isSynced) msg.isSynced = true
+}
+
+const triggerAiAnalysis = async (userPrompt) => {
+  messages.push({ role: 'user', text: userPrompt })
+  scrollToBottom()
+
+  isAiTyping.value = true
+
+  try {
+    const metrics = getLatestMetrics()
+
+    // 构造发给大模型的上下文
+    // 注意：我们将之前所有的消息映射为需要的格式
+    const historyMessages = messages
+      .filter((m) => !m.hasAction) // 过滤掉带按钮的特殊消息
+      .map((m) => ({
+        role: m.role === 'ai' ? 'assistant' : 'user',
+        content: m.text.replace(/<[^>]+>/g, ''), // 简单剥离HTML标签
+      }))
+
+    const aiReply = await askDeepSeek(historyMessages, metrics)
+
+    // 将返回的 markdown 或文本转换为简单 HTML 换行展示
+    const formattedReply = aiReply.replace(/\n/g, '<br/>')
+
+    messages.push({
+      role: 'ai',
+      text: formattedReply,
+      hasAction: false,
+    })
+  } catch (err) {
+    messages.push({
+      role: 'ai',
+      text: `<span style="color: red;">[系统提示] AI 分析请求失败：${err.message}</span>`,
+      hasAction: false,
+    })
+  } finally {
+    isAiTyping.value = false
+    scrollToBottom()
+  }
+}
 
 const sendMessage = () => {
-  if (!userInput.value.trim()) return;
-  messages.push({ role: 'user', text: userInput.value });
-  const input = userInput.value;
-  userInput.value = "";
-  scrollToBottom();
+  if (!userInput.value.trim() || isAiTyping.value) return
 
-  setTimeout(() => {
-    messages.push({ 
-      role: 'ai', 
-      text: `针对您的疑问 "${input}"，建议优先排查传感器接线和输出模块。`, 
-      hasAction: false 
-    });
-    scrollToBottom();
-  }, 1000);
-};
+  const input = userInput.value
+  userInput.value = ''
+
+  triggerAiAnalysis(input)
+}
 
 onMounted(() => {
-  setTimeout(startScan, 500);
-});
+  setTimeout(startScan, 500)
+})
 </script>
 
 <template>
   <div class="health-view">
     <header class="view-header">
-  <div class="header-left">
-    <div class="page-title">健康检测系统</div>
-    <div class="page-subtitle">HEALTH MONITORING SYSTEM</div>
-  </div>
-</header>
+      <div class="header-left">
+        <div class="page-title">健康检测系统</div>
+        <div class="page-subtitle">HEALTH MONITORING SYSTEM</div>
+      </div>
+    </header>
 
     <div class="header-section">
       <div class="progress-wrapper">
@@ -124,8 +211,12 @@ onMounted(() => {
       </div>
       <div class="stats-row">
         <div class="stat-item"><span>监测对象：</span><span class="stat-val">38个</span></div>
-        <div class="stat-item"><span>总用时：</span><span class="stat-val">{{ scanTimer }}</span></div>
-        <div class="stat-item"><span>发现异常：</span><span class="stat-val danger">{{ totalErrors }}个</span></div>
+        <div class="stat-item">
+          <span>总用时：</span><span class="stat-val">{{ scanTimer }}</span>
+        </div>
+        <div class="stat-item">
+          <span>发现异常：</span><span class="stat-val danger">{{ totalErrors }}个</span>
+        </div>
         <button class="btn-restart" @click="startScan">{{ isScanning ? '监测中...' : '再次监测' }}</button>
       </div>
     </div>
@@ -143,11 +234,11 @@ onMounted(() => {
               </div>
             </div>
             <div class="acc-body" :class="{ open: cate.isOpen }">
-              <div 
-                v-for="item in cate.items" 
-                :key="item.id" 
+              <div
+                v-for="item in cate.items"
+                :key="item.id"
                 class="error-item"
-                :class="{ active: currentSelectedId === item.id }" 
+                :class="{ active: currentSelectedId === item.id }"
                 @click="selectIssue(item)"
               >
                 <span class="dot">●</span>{{ item.desc }}
@@ -176,14 +267,21 @@ onMounted(() => {
           </div>
         </div>
         <div class="input-area">
-          <input 
-            type="text" 
-            class="chat-input" 
-            v-model="userInput" 
+          <input
+            type="text"
+            class="chat-input"
+            v-model="userInput"
             @keyup.enter="sendMessage"
-            placeholder="针对当前问题询问 AI..."
-          >
-          <button class="btn-send" @click="sendMessage">➤</button>
+            :placeholder="isAiTyping ? 'AI正在思考中...' : '针对当前问题询问 AI...'"
+            :disabled="isAiTyping"
+          />
+          <button class="btn-send" @click="sendMessage" :disabled="isAiTyping">
+            <i v-if="isAiTyping" class="iconfont" style="animation: spin 1s linear infinite">&#xe601;</i>
+            <span v-else>➤</span>
+          </button>
+        </div>
+        <div class="disclaimer">
+          免责声明：AI生成内容仅供运维参考，不代表最终决策。请结合实际情况及操作规程执行，任何操作需经授权审批。
         </div>
       </div>
     </div>
@@ -191,6 +289,28 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* 增加 disclaimer 样式和 spin 动画 */
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.disclaimer {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  opacity: 0.8;
+}
+
+.btn-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .health-view {
   height: 100%;
   width: 100%;
@@ -241,8 +361,12 @@ onMounted(() => {
   color: var(--accent-cyan);
 }
 
-.accent-green { color: var(--accent-green); }
-.accent-red { color: var(--accent-red); }
+.accent-green {
+  color: var(--accent-green);
+}
+.accent-red {
+  color: var(--accent-red);
+}
 
 .stats-row {
   display: flex;
@@ -288,7 +412,8 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.left-panel, .right-panel {
+.left-panel,
+.right-panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -298,8 +423,12 @@ onMounted(() => {
   transition: background-color 0.3s ease;
 }
 
-.left-panel { flex: 0.4; }
-.right-panel { flex: 0.6; }
+.left-panel {
+  flex: 0.4;
+}
+.right-panel {
+  flex: 0.6;
+}
 
 .panel-header {
   height: 48px;
@@ -375,7 +504,8 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.error-item:hover, .error-item.active {
+.error-item:hover,
+.error-item.active {
   background: rgba(239, 68, 68, 0.1);
   color: var(--text-primary);
   border-left: 3px solid var(--accent-red);
@@ -527,5 +657,4 @@ onMounted(() => {
   color: var(--text-secondary);
   margin-top: 5px;
 }
-
 </style>
