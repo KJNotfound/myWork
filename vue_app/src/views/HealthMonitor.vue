@@ -249,7 +249,7 @@ const sendMessage = () => {
         <div class="chat-container" ref="chatBoxRef">
           <div v-for="(msg, index) in messages" :key="index" class="chat-msg" :class="msg.role">
             <div class="avatar">
-              <i v-if="msg.role === 'ai'" class="iconfont">&#xe87d;</i>
+              <i v-if="msg.role === 'ai'" class="iconfont icon-jiankongfenxi"></i>
               <i v-else class="iconfont">&#xe602;</i>
             </div>
             <div class="msg-content">
