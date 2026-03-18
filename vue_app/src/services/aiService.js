@@ -1,6 +1,6 @@
 import axios from 'axios'
-const DEEPSEEK_API_URL = '/__ai/inference/chat/completions'
-const MODEL_ID = 'azureml-deepseek/DeepSeek-V3-0324'
+const DEEPSEEK_API_URL = 'https://models.inference.ai.azure.com/chat/completions'
+const MODEL_ID = 'DeepSeek-V3-0324'
 
 const SYSTEM_PROMPT = `你是一位专业的供热运维专家。
 请结合提供的实时参数（如温度、压力、流量等），分析当前换热站的运行效率。
